@@ -1,0 +1,40 @@
+entity_relation_extraction:
+  description: >
+    Extract all main entities (people, organizations, locations, concepts, and others as needed) and all explicit relations between them from the text below.
+    The extraction must work for both English and Spanish input.
+  output_format: |
+    {
+      "entities": [
+        {"id": "ent1", "type": "Person", "text": "John Smith"},
+        {"id": "ent2", "type": "Organization", "text": "OpenAI"},
+        {"id": "ent3", "type": "Location", "text": "San Francisco"}
+      ],
+      "relations": [
+        {"source_id": "ent1", "target_id": "ent2", "type": "works_at", "text": "works at"},
+        {"source_id": "ent2", "target_id": "ent3", "type": "located_in", "text": "located in"}
+      ]
+    }
+  instructions: |
+    - Extract only explicit and meaningful relations mentioned in the text.
+    - Always include the "type" for each entity (Person, Organization, Location, Concept, etc.).
+    - Each relation must have a "type" (relationship type) and a "text" (the exact phrase from the original text that supports the relation, if available).
+    - Output must be strictly valid JSON. Do not include any text outside the JSON block.
+    - If an entity or relation is ambiguous, choose the most probable interpretation and document this in the "type".
+    - If you detect language-specific terms, standardize entity and relation types in English.
+    - If possible, provide "start" and "end" character positions for each entity in the original text (optional for future development).
+    - Language: detect automatically and process accordingly.
+  example: |
+    Input:
+    "Marie Curie worked at the University of Paris in France."
+    Output:
+    {
+      "entities": [
+        {"id": "ent1", "type": "Person", "text": "Marie Curie"},
+        {"id": "ent2", "type": "Organization", "text": "University of Paris"},
+        {"id": "ent3", "type": "Location", "text": "France"}
+      ],
+      "relations": [
+        {"source_id": "ent1", "target_id": "ent2", "type": "works_at", "text": "worked at"},
+        {"source_id": "ent2", "target_id": "ent3", "type": "located_in", "text": "in"}
+      ]
+    }
