@@ -3,21 +3,21 @@
 
 import os
 from dotenv import load_dotenv
-import pinecone
+from pinecone import Pinecone
 
 load_dotenv()
 
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-PINECONE_INDEX = os.getenv("PINECONE_INDEX")
-PINECONE_HOST = os.getenv("PINECONE_HOST")
+PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX")
+PINECONE_ENV = os.getenv("PINECONE_ENV")
 DIMENSION = 1536  # Cambia si tu modelo de embedding tiene otra dimensión
 
-if not PINECONE_API_KEY or not PINECONE_INDEX or not PINECONE_HOST:
-    raise ValueError("Faltan variables de entorno para Pinecone")
+if not PINECONE_API_KEY or not PINECONE_INDEX_NAME:
+    raise ValueError("Faltan variables de entorno para Pinecone: PINECONE_API_KEY y PINECONE_INDEX son requeridas")
 
-# Inicializa cliente Pinecone serverless
-pc = pinecone.Pinecone(api_key=PINECONE_API_KEY)
-index = pc.Index(PINECONE_INDEX, host=PINECONE_HOST)
+# Inicializa cliente Pinecone
+pc = Pinecone(api_key=PINECONE_API_KEY)
+index = pc.Index(PINECONE_INDEX_NAME)
 
 def upsert_embedding(vector_id, vector_values, document_id, metadata=None):
     """
@@ -26,7 +26,17 @@ def upsert_embedding(vector_id, vector_values, document_id, metadata=None):
     meta = metadata or {}
     meta["document_id"] = str(document_id)
     vectors = [{"id": str(vector_id), "values": vector_values, "metadata": meta}]
-    index.upsert(vectors=vectors)
+    
+    print(f"🔄 Guardando embedding - ID: {vector_id}, Document: {document_id}")
+    print(f"📊 Vector shape: {len(vector_values)} dimensiones")
+    
+    try:
+        result = index.upsert(vectors=vectors)
+        print(f"✅ Embedding guardado exitosamente - Upserted: {result.get('upserted_count', 'unknown')}")
+        return result
+    except Exception as e:
+        print(f"❌ Error guardando embedding: {e}")
+        raise
 
 def query_embedding(query_vector, top_k=5, include_metadata=True):
     """
@@ -60,3 +70,21 @@ def delete_embeddings_by_document_id(document_id):
     ids_to_delete = [m["id"] for m in result.get("matches", [])]
     if ids_to_delete:
         index.delete(ids=ids_to_delete)
+
+def get_index_stats():
+    """
+    Obtiene estadísticas del índice (útil para debugging).
+    """
+    return index.describe_index_stats()
+
+def test_connection():
+    """
+    Prueba la conexión con Pinecone.
+    """
+    try:
+        stats = get_index_stats()
+        print(f"Conexión exitosa. Vectores en el índice: {stats.get('total_vector_count', 0)}")
+        return True
+    except Exception as e:
+        print(f"Error de conexión: {e}")
+        return False

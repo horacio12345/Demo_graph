@@ -4,12 +4,13 @@
 
 import os
 from dotenv import load_dotenv
-from langchain.text_splitter import SemanticChunker
-from langchain.embeddings import OpenAIEmbeddings
+from langchain_experimental.text_splitter import SemanticChunker
+from langchain_openai import OpenAIEmbeddings
 from langchain_community.document_loaders import TextLoader
 
 # Para Mistral OCR
 import requests
+import base64
 
 # Para Tesseract OCR
 try:
@@ -21,21 +22,66 @@ except ImportError:
 load_dotenv()
 
 MISTRAL_OCR_API_KEY = os.getenv("MISTRAL_API_KEY")
-MISTRAL_OCR_URL = os.getenv("MISTRAL_OCR_URL") or "https://api.mistral.ai/ocr"  # Cambia si tu endpoint es distinto
+MISTRAL_OCR_URL = "https://api.mistral.ai/v1/ocr"  # Endpoint corregido
 
 def run_mistral_ocr(file_path):
     """
     Procesa el archivo usando Mistral OCR API.
     Devuelve texto extraído como string.
+    Solo funciona con imágenes (JPG, PNG) y PDFs.
     """
-    headers = {"Authorization": f"Bearer {MISTRAL_OCR_API_KEY}"}
-    files = {"file": open(file_path, "rb")}
-    response = requests.post(MISTRAL_OCR_URL, headers=headers, files=files)
+    # Verificar que el archivo sea compatible con OCR
+    file_extension = os.path.splitext(file_path)[1].lower()
+    supported_extensions = ['.jpg', '.jpeg', '.png', '.pdf']
+    
+    if file_extension not in supported_extensions:
+        raise ValueError(f"Archivo {file_extension} no es compatible con Mistral OCR. "
+                        f"Formatos soportados: {supported_extensions}")
+    
+    headers = {
+        "Authorization": f"Bearer {MISTRAL_OCR_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    # Convertir archivo a base64
+    with open(file_path, "rb") as file:
+        file_content = base64.b64encode(file.read()).decode('utf-8')
+    
+    # Determinar el tipo de archivo correcto
+    if file_extension in ['.jpg', '.jpeg']:
+        media_type = "image/jpeg"
+    elif file_extension == '.png':
+        media_type = "image/png"
+    elif file_extension == '.pdf':
+        media_type = "application/pdf"
+    else:
+        raise ValueError(f"Formato {file_extension} no soportado")
+    
+    payload = {
+        "model": "mistral-ocr-latest",
+        "document": {
+            "image_url": f"data:{media_type};base64,{file_content}",
+            "type": "image_url"
+        }
+    }
+    
+    response = requests.post(MISTRAL_OCR_URL, headers=headers, json=payload)
     if response.status_code != 200:
         raise RuntimeError(f"Mistral OCR error: {response.status_code} {response.text}")
+    
     result = response.json()
-    # Asume que el texto viene en result["text"], adáptalo según la API real
-    return result.get("text", "")
+    
+    # Extraer el texto del resultado
+    if "document_annotation" in result and result["document_annotation"]:
+        return result["document_annotation"]
+    elif "pages" in result and len(result["pages"]) > 0:
+        text = ""
+        for page in result["pages"]:
+            if "content" in page:
+                text += page["content"] + "\n"
+        return text
+    else:
+        return result.get("text", "")
 
 def run_tesseract_ocr(file_path, lang="eng"):
     """
@@ -61,7 +107,18 @@ def run_tesseract_ocr(file_path, lang="eng"):
 def extract_text(file_path, ocr_method="mistral", lang="eng"):
     """
     Selector de OCR: elige entre Mistral OCR (API) o Tesseract (local)
+    Si el archivo es texto plano, lo lee directamente sin OCR.
     """
+    # Verificar si es un archivo de texto plano
+    text_extensions = ['.txt', '.md', '.py', '.js', '.json', '.csv', '.log']
+    file_extension = os.path.splitext(file_path)[1].lower()
+    
+    if file_extension in text_extensions:
+        # Es un archivo de texto, leerlo directamente
+        with open(file_path, 'r', encoding='utf-8') as file:
+            return file.read()
+    
+    # Es imagen/PDF, usar OCR
     if ocr_method == "mistral":
         return run_mistral_ocr(file_path)
     elif ocr_method == "tesseract":
@@ -71,16 +128,40 @@ def extract_text(file_path, ocr_method="mistral", lang="eng"):
 
 import re
 
-def chunk_text_semantic(text, openai_api_key, chunk_size=1000):
+def chunk_text_semantic(text, openai_api_key, max_chunk_size=1000):
     """
     Divide el texto en chunks semánticos usando LangChain SemanticChunker.
     Requiere clave de OpenAI.
     """
-    embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
-    chunker = SemanticChunker(embeddings, breakpoint_threshold_type="standard", chunk_size=chunk_size)
-    # LangChain espera un "Document", así que lo creamos
-    from langchain_core.documents import Document
-    doc = Document(page_content=text)
-    chunks = chunker.split_documents([doc])
-    # Devuelve solo el texto de cada chunk
-    return [chunk.page_content for chunk in chunks]
+    try:
+        embeddings = OpenAIEmbeddings(api_key=openai_api_key)
+        # SemanticChunker no usa chunk_size, usa otros parámetros
+        chunker = SemanticChunker(
+            embeddings, 
+            breakpoint_threshold_type="percentile",
+            breakpoint_threshold_amount=95  # Solo divide cuando hay gran diferencia semántica
+        )
+        # LangChain espera un "Document", así que lo creamos
+        from langchain_core.documents import Document
+        doc = Document(page_content=text)
+        chunks = chunker.split_documents([doc])
+        
+        # Si los chunks son muy grandes, dividirlos adicionalmente
+        final_chunks = []
+        for chunk in chunks:
+            if len(chunk.page_content) > max_chunk_size:
+                # Dividir chunks grandes en trozos más pequeños
+                content = chunk.page_content
+                for i in range(0, len(content), max_chunk_size):
+                    final_chunks.append(content[i:i+max_chunk_size])
+            else:
+                final_chunks.append(chunk.page_content)
+        
+        print(f"Chunking semántico exitoso: {len(final_chunks)} chunks creados")
+        return final_chunks
+        
+    except Exception as e:
+        # Fallback a chunking simple si falla el semántico
+        print(f"Error en chunking semántico: {e}")
+        print("Usando chunking simple como fallback...")
+        return [text[i:i+max_chunk_size] for i in range(0, len(text), max_chunk_size)]

@@ -8,7 +8,8 @@ plotly==5.22.0
 langchain==0.2.2
 langchain-community==0.2.2
 langchain-core==0.2.2
-
+langchain-text-splitters==0.0.1
+langchain-experimental==0.3.4
 # --- Pinecone y embeddings ---
 pinecone-client==3.2.2
 openai==1.30.1
@@ -32,3 +33,5 @@ PyYAML==6.0.1
 
 # --- Pruebas ---
 pytest==8.2.1
+
+networkx==3.4.2
