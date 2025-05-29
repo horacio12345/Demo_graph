@@ -10,7 +10,7 @@ def llm_selector(default='openai'):
             id='llm-method',
             options=[
                 {'label': 'OpenAI GPT-4o', 'value': 'openai'},
-                {'label': 'Claude Sonnet 3/4', 'value': 'claude'}
+                {'label': 'Claude Sonnet 4', 'value': 'claude'}
             ],
             value=default,
             clearable=False,

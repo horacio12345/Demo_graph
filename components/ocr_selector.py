@@ -3,14 +3,14 @@
 
 from dash import dcc, html
 
-def ocr_selector(default='mistral'):
+def ocr_selector(default='docling'):
     return html.Div([
-        html.Label("Selecciona el motor OCR:"),
+        html.Label("Selecciona el procesador de texto:"),
         dcc.Dropdown(
             id='ocr-method',
             options=[
-                {'label': 'Mistral OCR (API)', 'value': 'mistral'},
-                {'label': 'Tesseract OCR (Local)', 'value': 'tesseract'}
+                {'label': 'Docling', 'value': 'docling'},
+                {'label': 'Tesseract', 'value': 'tesseract'}
             ],
             value=default,
             clearable=False,
