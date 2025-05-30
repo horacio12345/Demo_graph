@@ -1,5 +1,5 @@
 # ./components/graph_view.py
-# Componente simplificado que garantiza la visualización
+# Componente con colores CORREGIDOS para los nodos
 
 import dash_cytoscape as cyto
 from dash import html
@@ -23,9 +23,9 @@ def graph_view(elements=[], layout_name="cose", style=None, stylesheet=None):
     if style:
         default_style.update(style)
 
-    # STYLESHEET PROFESIONAL SIMPLIFICADO
+    # STYLESHEET PROFESIONAL - SELECTORES CORREGIDOS
     working_stylesheet = [
-        # Nodos base
+        # Nodos base - COLOR AZUL POR DEFECTO
         {
             "selector": "node",
             "style": {
@@ -46,9 +46,11 @@ def graph_view(elements=[], layout_name="cose", style=None, stylesheet=None):
             }
         },
         
+        # ===== SELECTORES CORREGIDOS POR TIPO =====
+        
         # Personas - ROJO VIBRANTE
         {
-            "selector": "node[type = 'Person']",
+            "selector": "node[type = \"Person\"]",  # Comillas dobles escapadas
             "style": {
                 "background-color": "#ef4444",
                 "border-color": "#dc2626",
@@ -56,19 +58,19 @@ def graph_view(elements=[], layout_name="cose", style=None, stylesheet=None):
             }
         },
         
-        # Organizaciones - VERDE AZULADO
+        # Organizaciones - VERDE AZULADO  
         {
-            "selector": "node[type = 'Organization']",
+            "selector": "node[type = \"Organization\"]",
             "style": {
                 "background-color": "#10b981",
-                "border-color": "#059669",
+                "border-color": "#059669", 
                 "shape": "rectangle"
             }
         },
         
         # Ubicaciones - AZUL
         {
-            "selector": "node[type = 'Location']",
+            "selector": "node[type = \"Location\"]",
             "style": {
                 "background-color": "#3b82f6",
                 "border-color": "#2563eb",
@@ -76,9 +78,17 @@ def graph_view(elements=[], layout_name="cose", style=None, stylesheet=None):
             }
         },
         
-        # Industrias - VERDE
+        # Industrias y Conceptos - VERDE CLARO
         {
-            "selector": "node[type = 'Industry'], node[type = 'Concept']",
+            "selector": "node[type = \"Industry\"]",
+            "style": {
+                "background-color": "#22c55e",
+                "border-color": "#16a34a",
+                "shape": "hexagon"
+            }
+        },
+        {
+            "selector": "node[type = \"Concept\"]", 
             "style": {
                 "background-color": "#22c55e",
                 "border-color": "#16a34a",
@@ -86,19 +96,35 @@ def graph_view(elements=[], layout_name="cose", style=None, stylesheet=None):
             }
         },
         
-        # Email/Posición - NARANJA
+        # Email, Posición, Roles - NARANJA
         {
-            "selector": "node[type = 'Email'], node[type = 'Position'], node[type = 'Role']",
+            "selector": "node[type = \"Email\"]",
             "style": {
                 "background-color": "#f59e0b",
                 "border-color": "#d97706",
                 "shape": "triangle"
             }
         },
-        
-        # Otros - PÚRPURA
         {
-            "selector": "node[type = 'Unknown'], node:untyped",
+            "selector": "node[type = \"Position\"]",
+            "style": {
+                "background-color": "#f59e0b",
+                "border-color": "#d97706", 
+                "shape": "triangle"
+            }
+        },
+        {
+            "selector": "node[type = \"Role\"]",
+            "style": {
+                "background-color": "#f59e0b",
+                "border-color": "#d97706",
+                "shape": "triangle"  
+            }
+        },
+        
+        # Unknown y otros - PÚRPURA (solo para tipos realmente desconocidos)
+        {
+            "selector": "node[type = \"Unknown\"]",
             "style": {
                 "background-color": "#8b5cf6",
                 "border-color": "#7c3aed",
@@ -106,7 +132,75 @@ def graph_view(elements=[], layout_name="cose", style=None, stylesheet=None):
             }
         },
         
-        # Aristas
+        # ===== SELECTORES ALTERNATIVOS POR CLASE CSS =====
+        # Por si los selectores de tipo no funcionan, usar clases
+        
+        {
+            "selector": ".node-person",
+            "style": {
+                "background-color": "#ef4444",
+                "border-color": "#dc2626",
+                "shape": "ellipse"
+            }
+        },
+        {
+            "selector": ".node-organization", 
+            "style": {
+                "background-color": "#10b981",
+                "border-color": "#059669",
+                "shape": "rectangle"
+            }
+        },
+        {
+            "selector": ".node-location",
+            "style": {
+                "background-color": "#3b82f6", 
+                "border-color": "#2563eb",
+                "shape": "diamond"
+            }
+        },
+        {
+            "selector": ".node-industry",
+            "style": {
+                "background-color": "#22c55e",
+                "border-color": "#16a34a", 
+                "shape": "hexagon"
+            }
+        },
+        {
+            "selector": ".node-concept",
+            "style": {
+                "background-color": "#22c55e",
+                "border-color": "#16a34a",
+                "shape": "hexagon"
+            }
+        },
+        {
+            "selector": ".node-email",
+            "style": {
+                "background-color": "#f59e0b",
+                "border-color": "#d97706",
+                "shape": "triangle"
+            }
+        },
+        {
+            "selector": ".node-position",
+            "style": {
+                "background-color": "#f59e0b", 
+                "border-color": "#d97706",
+                "shape": "triangle"
+            }
+        },
+        {
+            "selector": ".node-role",
+            "style": {
+                "background-color": "#f59e0b",
+                "border-color": "#d97706", 
+                "shape": "triangle"
+            }
+        },
+        
+        # ===== ARISTAS =====
         {
             "selector": "edge",
             "style": {
@@ -128,15 +222,23 @@ def graph_view(elements=[], layout_name="cose", style=None, stylesheet=None):
         
         # Relaciones importantes - ROJO
         {
-            "selector": "edge[type = 'works_at'], edge[type = 'located_in']",
+            "selector": "edge[type = \"works_at\"]",
             "style": {
                 "line-color": "#ef4444",
                 "target-arrow-color": "#ef4444",
                 "width": "6px"
             }
         },
+        {
+            "selector": "edge[type = \"located_in\"]",
+            "style": {
+                "line-color": "#ef4444",
+                "target-arrow-color": "#ef4444", 
+                "width": "6px"
+            }
+        },
         
-        # Hover effects
+        # ===== EFECTOS HOVER =====
         {
             "selector": "node:hover",
             "style": {
@@ -144,7 +246,6 @@ def graph_view(elements=[], layout_name="cose", style=None, stylesheet=None):
                 "opacity": 0.8
             }
         },
-        
         {
             "selector": "node:selected",
             "style": {
@@ -175,54 +276,16 @@ def graph_view(elements=[], layout_name="cose", style=None, stylesheet=None):
     }
 
     return html.Div([
-        # Leyenda flotante (simplificada)
-        html.Div([
-            html.H6("🏷️ Leyenda", style={"color": "#e2e8f0", "marginBottom": "10px", "fontSize": "14px"}),
-            html.Div([
-                html.Div([
-                    html.Div(style={
-                        "width": "12px", "height": "12px", "borderRadius": "50%",
-                        "backgroundColor": "#ef4444", "display": "inline-block", "marginRight": "6px"
-                    }),
-                    html.Span("Personas", style={"color": "#e2e8f0", "fontSize": "11px"})
-                ], style={"marginBottom": "3px", "display": "flex", "alignItems": "center"}),
-                
-                html.Div([
-                    html.Div(style={
-                        "width": "12px", "height": "12px", "borderRadius": "2px",
-                        "backgroundColor": "#10b981", "display": "inline-block", "marginRight": "6px"
-                    }),
-                    html.Span("Organizaciones", style={"color": "#e2e8f0", "fontSize": "11px"})
-                ], style={"marginBottom": "3px", "display": "flex", "alignItems": "center"}),
-                
-                html.Div([
-                    html.Div(style={
-                        "width": "12px", "height": "12px", "transform": "rotate(45deg)",
-                        "backgroundColor": "#3b82f6", "display": "inline-block", "marginRight": "6px"
-                    }),
-                    html.Span("Ubicaciones", style={"color": "#e2e8f0", "fontSize": "11px"})
-                ], style={"marginBottom": "3px", "display": "flex", "alignItems": "center"}),
-                
-                html.Div([
-                    html.Div(style={
-                        "width": "12px", "height": "12px", "clipPath": "polygon(50% 0%, 0% 100%, 100% 100%)",
-                        "backgroundColor": "#22c55e", "display": "inline-block", "marginRight": "6px"
-                    }),
-                    html.Span("Industrias", style={"color": "#e2e8f0", "fontSize": "11px"})
-                ], style={"display": "flex", "alignItems": "center"})
-            ])
-        ], style={
-            "position": "absolute",
-            "bottom": "20px",
-            "left": "20px",
-            "background": "rgba(15, 23, 42, 0.9)",
-            "padding": "12px",
-            "borderRadius": "8px",
-            "border": "1px solid rgba(255, 255, 255, 0.1)",
-            "zIndex": 1000,
-            "minWidth": "120px",
-            "backdropFilter": "blur(10px)"
-        }),
+        # PLACEHOLDER PARA LEYENDA DINÁMICA - se llenará desde callback
+        html.Div(
+            id="dynamic-legend",
+            style={
+                "position": "absolute",
+                "bottom": "20px",
+                "left": "20px",
+                "zIndex": 1000
+            }
+        ),
         
         # Grafo principal
         cyto.Cytoscape(

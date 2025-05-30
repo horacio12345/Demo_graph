@@ -14,11 +14,13 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 LLM_DEFAULT = os.getenv("LLM_DEFAULT", "openai")
 
+# REEMPLAZAR SOLO esta función en core/llm.py
+
 def create_entity_prompt(text):
     """
-    Crea el prompt para extracción de entidades, evitando problemas de sintaxis.
+    Crea el prompt para extracción de entidades EN ESPAÑOL.
     """
-    return f"""Extrae entidades y relaciones del siguiente texto.
+    return f"""Extrae entidades y relaciones del siguiente texto. Responde TODO EN ESPAÑOL.
 
 Responde ÚNICAMENTE con JSON válido en este formato exacto:
 
@@ -28,9 +30,11 @@ Responde ÚNICAMENTE con JSON válido en este formato exacto:
     {{"id": "ent2", "type": "Organization", "text": "Microsoft"}}
   ],
   "relations": [
-    {{"source_id": "ent1", "target_id": "ent2", "type": "works_at", "text": "trabaja en"}}
+    {{"source_id": "ent1", "target_id": "ent2", "type": "trabaja_en", "text": "trabaja en"}}
   ]
 }}
+
+IMPORTANTE: Las relaciones deben estar en español (trabaja_en, ubicado_en, opera_en, etc.)
 
 Texto: {text}
 
