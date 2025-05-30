@@ -5,21 +5,29 @@
 
 /* ========== VARIABLES CSS ========== */
 :root {
-    --bg-primary: #0f172a;
-    --bg-secondary: #1e293b;
+    /* Colores base */
+    --bg-primary: #121826;
+    --bg-secondary: #1E293B;
     --bg-tertiary: #334155;
-    --text-primary: #f8fafc;
-    --text-secondary: #e2e8f0;
-    --text-muted: #94a3b8;
-    --accent-blue: #3b82f6;
-    --accent-green: #10b981;
-    --accent-purple: #8b5cf6;
-    --accent-orange: #f59e0b;
-    --accent-red: #ef4444;
-    --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --shadow-medium: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    --shadow-hard: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    --border-radius: 12px;
+    
+    /* Texto */
+    --text-primary: #E2E8F0;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+    
+    /* Colores de acento */
+    --accent-blue: #60A5FA;
+    --accent-green: #34D399;
+    --accent-purple: #A78BFA;
+    --accent-orange: #FBBF24;
+    --accent-red: #F87171;
+    
+    /* Sombras */
+    --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    --shadow-medium: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    --shadow-hard: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    
+    --border-radius: 8px;
     --transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
@@ -30,7 +38,7 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    background: linear-gradient(135deg, #121826 0%, #1E293B 100%);
     color: var(--text-primary);
     margin: 0;
     padding: 0;
@@ -82,7 +90,7 @@ body {
     position: absolute;
     width: 3px;
     height: 3px;
-    background: radial-gradient(circle, #3b82f6 0%, transparent 70%);
+    background: radial-gradient(circle, #60A5FA 0%, transparent 70%);
     border-radius: 50%;
     animation: float 8s ease-in-out infinite;
 }
@@ -118,7 +126,7 @@ body {
 .card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-hard) !important;
-    border-color: rgba(59, 130, 246, 0.5) !important;
+    border-color: rgba(96, 165, 250, 0.5) !important;
 }
 
 .card-header {
@@ -210,12 +218,13 @@ body {
 .form-control:focus, .form-select:focus {
     background: rgba(30, 41, 59, 0.95) !important;
     border-color: var(--accent-blue) !important;
-    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25) !important;
+    box-shadow: 0 0 0 0.2rem rgba(96, 165, 250, 0.25) !important;
     color: var(--text-primary) !important;
 }
 
 .form-control::placeholder {
-    color: var(--text-muted) !important;
+    color: #FFFFFF !important;
+    opacity: 1;
 }
 
 .form-label {
@@ -239,7 +248,7 @@ body {
 }
 
 .dropdown-item:hover {
-    background: rgba(59, 130, 246, 0.2) !important;
+    background: rgba(96, 165, 250, 0.2) !important;
     color: var(--text-primary) !important;
 }
 
@@ -251,25 +260,25 @@ body {
 }
 
 .alert-info {
-    background: rgba(59, 130, 246, 0.2) !important;
+    background: rgba(96, 165, 250, 0.2) !important;
     color: #93c5fd !important;
     border-left: 4px solid var(--accent-blue) !important;
 }
 
 .alert-success {
-    background: rgba(16, 185, 129, 0.2) !important;
+    background: rgba(52, 211, 153, 0.2) !important;
     color: #86efac !important;
     border-left: 4px solid var(--accent-green) !important;
 }
 
 .alert-danger {
-    background: rgba(239, 68, 68, 0.2) !important;
+    background: rgba(248, 113, 113, 0.2) !important;
     color: #fca5a5 !important;
     border-left: 4px solid var(--accent-red) !important;
 }
 
 .alert-warning {
-    background: rgba(245, 158, 11, 0.2) !important;
+    background: rgba(251, 191, 36, 0.2) !important;
     color: #fcd34d !important;
     border-left: 4px solid var(--accent-orange) !important;
 }
@@ -357,7 +366,7 @@ body {
 }
 
 .rc-slider-handle:hover, .rc-slider-handle:focus {
-    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.2) !important;
+    box-shadow: 0 0 0 8px rgba(96, 165, 250, 0.2) !important;
 }
 
 /* Loading spinners */
@@ -376,13 +385,13 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(59, 130, 246, 0.6);
+    background: rgba(96, 165, 250, 0.6);
     border-radius: 4px;
     transition: var(--transition);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(59, 130, 246, 0.8);
+    background: rgba(96, 165, 250, 0.8);
 }
 
 /* ========== ANIMACIONES PERSONALIZADAS ========== */
@@ -408,10 +417,10 @@ body {
 
 @keyframes glow {
     0%, 100% {
-        box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+        box-shadow: 0 0 20px rgba(96, 165, 250, 0.6);
     }
     50% {
-        box-shadow: 0 0 30px rgba(59, 130, 246, 0.9);
+        box-shadow: 0 0 30px rgba(96, 165, 250, 0.9);
     }
 }
 
@@ -453,7 +462,7 @@ body {
 }
 
 .shadow-neon {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.6), 0 0 40px rgba(59, 130, 246, 0.3) !important;
+    box-shadow: 0 0 20px rgba(96, 165, 250, 0.6), 0 0 40px rgba(96, 165, 250, 0.3) !important;
 }
 
 .transition-smooth {
@@ -479,9 +488,64 @@ body {
     right: 0;
     bottom: 0;
     background: 
-        radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 40% 60%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+        radial-gradient(circle at 20% 20%, rgba(96, 165, 250, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(52, 211, 153, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 60%, rgba(167, 139, 250, 0.1) 0%, transparent 50%);
     pointer-events: none;
     z-index: 1;
+}
+
+/* ========== ESTILOS PARA EL ÁREA DE CARGA ========== */
+.upload-area {
+    background: var(--bg-secondary) !important;
+    border: none !important;
+    border-radius: var(--border-radius) !important;
+    padding: 20px;
+    text-align: center;
+    color: var(--text-primary) !important;
+    margin: 10px 0;
+    cursor: pointer;
+    transition: var(--transition) !important;
+}
+
+.upload-area:hover {
+    background: var(--bg-tertiary) !important;
+}
+
+.upload-area p {
+    color: var(--text-secondary) !important;
+    margin: 1rem 0;
+}
+
+.upload-area .btn {
+    margin-top: 1rem;
+}
+
+/* Mejorar visibilidad de etiquetas y textos */
+label, .form-label {
+    color: var(--text-primary) !important;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+/* Asegurar que los textos en los inputs sean visibles */
+input, select, textarea {
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    border-radius: var(--border-radius) !important;
+    padding: 0.75rem 1rem !important;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--accent-blue) !important;
+    box-shadow: 0 0 0 0.2rem rgba(96, 165, 250, 0.25) !important;
+    outline: none;
+}
+
+/* Placeholders visibles */
+::placeholder {
+    color: #FFFFFF !important;
+    opacity: 1;
 }

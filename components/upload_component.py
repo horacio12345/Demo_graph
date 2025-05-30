@@ -5,35 +5,66 @@ from dash import dcc, html
 
 def upload_component():
     return html.Div([
-        html.H4("Sube tu documento o ingresa un enlace"),
-        dcc.Upload(
-            id='upload-data',
-            children=html.Div([
-                'Arrastra o ',
-                html.A('selecciona un archivo')
-            ]),
-            style={
-                'width': '100%',
-                'height': '80px',
-                'lineHeight': '80px',
-                'borderWidth': '2px',
-                'borderStyle': 'dashed',
-                'borderRadius': '10px',
-                'textAlign': 'center',
-                'margin-bottom': '10px',
-                'backgroundColor': '#f3f4f6'
-            },
-            multiple=False
-        ),
+        html.Div(className="upload-area", children=[
+            dcc.Upload(
+                id='upload-data',
+                className='upload-area',
+                children=html.Div(
+                    'Arrastra o selecciona un archivo', 
+                    style={'color': 'var(--accent-blue)', 'textDecoration': 'underline'}
+                ),
+                style={
+                    'width': '100%',
+                    'height': '100%',
+                    'display': 'flex',
+                    'alignItems': 'center',
+                    'justifyContent': 'center',
+                    'cursor': 'pointer',
+                    'border': 'none',
+                    'background': 'transparent',
+                    'padding': '20px',
+                    'textAlign': 'center',
+                    'fontSize': '1rem',
+                    'transition': 'var(--transition)'
+                },
+                multiple=False
+            ),
+        ]),
         html.Div([
             dcc.Input(
                 id='input-url',
                 type='url',
-                placeholder='...o pega aquí un enlace a un PDF o imagen',
-                style={'width': '100%', 'padding': '8px', 'margin-top': '8px'}
+                placeholder='...o pega aquí el enlace a un texto',
+                style={
+                    'width': '100%',
+                    'maxWidth': '100%',  
+                    'boxSizing': 'border-box',  
+                    'padding': '12px',
+                    'margin': '16px 0 8px 0',
+                    'borderRadius': 'var(--border-radius)',
+                    'border': '1px solid var(--bg-tertiary)',
+                    'background': 'var(--bg-secondary)',
+                    'color': 'var(--text-primary)',
+                    'fontSize': '0.95rem',
+                    'transition': 'var(--transition)'
+                }
             ),
-            html.Button('Procesar enlace', id='process-url-btn', n_clicks=0, style={
-                'width': '100%', 'margin-top': '8px'
-            })
+            html.Button('Procesar enlace', 
+                id='process-url-btn', 
+                n_clicks=0, 
+                className='btn btn-primary',
+                style={
+                    'width': '100%',
+                    'margin': '8px 0',
+                    'padding': '12px',
+                    'fontWeight': '500',
+                    'borderRadius': 'var(--border-radius)',
+                    'border': 'none',
+                    'cursor': 'pointer',
+                    'transition': 'var(--transition)',
+                    'background': 'var(--accent-blue)',
+                    'color': 'white'
+                }
+            )
         ])
-    ], style={'margin-bottom': '32px'})
+    ], style={'marginBottom': '24px'})

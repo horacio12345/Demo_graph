@@ -24,7 +24,7 @@ app = Dash(__name__, external_stylesheets=[dbc.themes.ZEPHYR], suppress_callback
 app.layout = dbc.Container([
     dbc.Row([
         dbc.Col([
-            html.H2("RAG Demo - Knowledge Graph Extraction"),
+            html.H2("RAG Demo - Knowledge Graph Extraction", style={'color': 'black'}),
             html.Hr(),
             upload_component(),
             ocr_selector(),

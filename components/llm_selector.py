@@ -5,7 +5,12 @@ from dash import dcc, html
 
 def llm_selector(default='openai'):
     return html.Div([
-        html.Label("Selecciona el LLM:"),
+        html.Label("Selecciona el LLM:", style={
+            'color': '#64748B',  # Gris oscuro
+            'fontSize': '0.9rem',  # Tamaño de letra más pequeño
+            'marginBottom': '8px',
+            'display': 'block'
+        }),
         dcc.Dropdown(
             id='llm-method',
             options=[
