@@ -1,6 +1,6 @@
 # ./app.py
 # Entry point de la aplicación Dash: layout principal y registro de callbacks
-
+import os
 from dash import Dash, html, dcc
 import dash_bootstrap_components as dbc
 
@@ -48,4 +48,13 @@ register_graph_callbacks(app)
 register_embedding_callbacks(app)
 
 if __name__ == "__main__":
-    app.run_server(debug=False)
+
+    # Railway asigna puerto dinámicamente
+    port = int(os.environ.get("PORT", 8050))
+    
+    # Configuración para producción
+    app.run_server(
+        debug=False,  # IMPORTANTE: False en producción
+        host="0.0.0.0",  # IMPORTANTE: permitir conexiones externas
+        port=port
+    )
