@@ -87,7 +87,7 @@ def register_ocr_callbacks(app):
             from core import llm
             
             # Procesar chunks para extraer entidades
-            sample_chunks = chunks[:5]  # Usar más chunks
+            sample_chunks = chunks[:3]  # Usar más chunks
             all_entities, all_relations = [], []
             
             for i, chunk in enumerate(sample_chunks):
