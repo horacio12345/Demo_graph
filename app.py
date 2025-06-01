@@ -43,7 +43,7 @@ server.secret_key = os.environ.get('FLASK_SECRET_KEY', 'cambiar_en_produccion_cl
 server.config['SESSION_COOKIE_HTTPONLY'] = True
 server.config['SESSION_COOKIE_SECURE'] = True if os.environ.get('RAILWAY_ENVIRONMENT_NAME') else False
 server.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-server.config['PERMANENT_SESSION_LIFETIME'] = 0
+server.config['PERMANENT_SESSION_LIFETIME'] = 600 # 10 minutos
 
 # ⭐ CONFIGURAR RUTAS DE AUTENTICACIÓN ⭐
 setup_auth_routes(app)

@@ -4,6 +4,11 @@ A demonstration application that converts documents into interactive knowledge g
 
 ## 🌟 Key Features
 
+### 🔐 Secure Access
+- **Authentication System**: Login required to access the application
+- **Session Management**: Secure Flask sessions with automatic logout
+- **User Management**: Admin account with expandable user system
+
 ### 📄 Intelligent Document Processing
 - **Advanced OCR**: Support for PDF, DOCX, images using Docling and Tesseract
 - **URL Processing**: Web content and online PDF extraction
@@ -48,7 +53,7 @@ pip install -r requirements.txt
 3. **Configure environment variables**
 ```bash
 cp .env.example .env
-# Edit .env with your API keys
+# Edit .env with your API keys and authentication settings
 ```
 
 4. **Run application**
@@ -56,26 +61,46 @@ cp .env.example .env
 python app.py
 ```
 
-5. **Open in browser**
+5. **Access application**
 ```
-http://127.0.0.1:8050/
+http://127.0.0.1:8080/
 ```
+
+6. **Login**
+- Use the admin credentials you configured in `.env`
+- Default: username `admin` with your chosen password
 
 ## ⚙️ Configuration
 
 ### Required Environment Variables
 
 ```env
-# OpenAI API
+# Authentication (Required)
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=your_secure_password
+FLASK_SECRET_KEY=your_flask_secret_key
+
+# OpenAI API (Required)
 OPENAI_API_KEY=your_openai_key
 
-# Pinecone (Vector database)
+# Pinecone (Required for embeddings)
 PINECONE_API_KEY=your_pinecone_key
 PINECONE_INDEX=index_name
-PINECONE_ENV=your_pinecone_environment
 
 # Optional configuration
 LLM_DEFAULT=openai
+```
+
+### Generate Flask Secret Key
+
+**For Linux/Mac:**
+```bash
+python -c "import secrets; print('FLASK_SECRET_KEY=' + secrets.token_hex(32))"
+```
+
+**For Windows:**
+```bash
+python -c "import secrets; print('FLASK_SECRET_KEY=' + secrets.token_hex(32))"
 ```
 
 ### Pinecone Setup
@@ -86,31 +111,40 @@ LLM_DEFAULT=openai
 
 ## 📖 Usage
 
-### 1. Upload Document
+### 1. Authentication
+- **Access application** at your configured URL
+- **Login** with admin credentials from `.env`
+- **Session** remains active for 10 minutes of inactivity
+
+### 2. Upload Document
 - **Drag and drop** PDF, DOCX or image files
 - **Paste URL** of web documents or online PDFs
 - Select processing method (Docling/Tesseract)
 
-### 2. Configure Processing
+### 3. Configure Processing
 - **Text processor**: Docling (recommended) or Tesseract
 - **LLM Model**: OpenAI GPT-4o or Claude Sonnet 4
 
-### 3. Explore Results
+### 4. Explore Results
 - **Interactive graph**: Navigation, zoom, node selection
 - **Statistics panel**: Entity and relationship counters
 - **Dynamic legend**: Types present in current document
 
-### 4. Analyze Embeddings
+### 5. Analyze Embeddings
 - **Click** on any graph node
 - **View embeddings**: Numerical values representing the concept
 - **Understand AI**: Educational explanation of how they work
+
+### 6. Session Management
+- **Logout**: Use "Cerrar Sesión" link in top-right corner
+- **Auto-logout**: Sessions expire after 10 minutes of inactivity
 
 ## 🏗️ Architecture
 
 ### Project Structure
 
 ```
-├── app.py                  # Main entry point
+├── app.py                  # Main entry point with authentication
 ├── components/             # UI components
 │   ├── graph_view.py      # Graph visualization
 │   ├── upload_component.py # File upload
@@ -123,11 +157,14 @@ LLM_DEFAULT=openai
 │   ├── llm_callbacks.py   # LLM extraction
 │   └── embedding_callbacks.py # Embedding management
 ├── core/                  # Business logic
+│   ├── auth.py           # Authentication system
 │   ├── ocr.py            # OCR processing
 │   ├── llm.py            # LLM integration
 │   ├── embeddings.py     # Vector management
 │   ├── graph_builder.py  # Graph construction
 │   └── utils.py          # General utilities
+├── data/                 # User data (created automatically)
+│   └── users.json       # User credentials (hashed)
 ├── assets/               # Static resources
 │   └── style.css        # Custom styles
 └── requirements.txt     # Python dependencies
@@ -135,18 +172,19 @@ LLM_DEFAULT=openai
 
 ### Data Flow
 
-1. **Upload** → Document/URL input by user
-2. **Extraction** → OCR converts to plain text
-3. **Chunking** → Semantic text division
-4. **Vectorization** → Embedding generation
-5. **Analysis** → LLM extracts entities and relationships
-6. **Visualization** → Interactive graph construction
+1. **Authentication** → User login verification
+2. **Upload** → Document/URL input by user
+3. **Extraction** → OCR converts to plain text
+4. **Chunking** → Semantic text division
+5. **Vectorization** → Embedding generation
+6. **Analysis** → LLM extracts entities and relationships
+7. **Visualization** → Interactive graph construction
 
 ## 🛠️ Technologies Used
 
 ### Backend
 - **Dash**: Python web framework
-- **Flask**: Underlying web server
+- **Flask**: Underlying web server with session management
 - **Docling**: Advanced document OCR
 - **PyTesseract**: Backup OCR
 - **LangChain**: Semantic chunking
@@ -156,6 +194,11 @@ LLM_DEFAULT=openai
 - **Claude Sonnet 4**: Alternative LLM
 - **OpenAI Embeddings**: Text vectorization
 - **Pinecone**: Vector database
+
+### Security
+- **Flask Sessions**: Secure session management
+- **SHA-256 Hashing**: Password security
+- **Environment Variables**: Secure configuration
 
 ### Frontend
 - **Dash Cytoscape**: Graph visualization
@@ -182,6 +225,16 @@ LLM_DEFAULT=openai
 
 ## 🔧 Customization
 
+### Add New Users
+
+The system is designed for expansion. You can modify `core/auth.py` to add user management features:
+
+```python
+# Example: Add user programmatically
+from core.auth import auth_manager
+success, message = auth_manager.add_user("newuser", "password123")
+```
+
 ### Add New Entity Types
 
 1. Modify prompt in `core/llm.py`
@@ -200,34 +253,13 @@ LLM_DEFAULT=openai
 - Modify `working_stylesheet` in `graph_view.py` for nodes
 - Customize colors in `create_dynamic_legend()`
 
-## 🐛 Troubleshooting
 
-### Common Issues
+## 🔒 Security Notes
 
-**API Keys Error**
-```bash
-# Check environment variables
-echo $OPENAI_API_KEY
-echo $PINECONE_API_KEY
-```
-
-**Docling Problems**
-```bash
-# Install system dependencies
-pip install docling[full]
-```
-
-**Pinecone Errors**
-- Verify index has dimension 1536
-- Check environment is correct
-
-### Debug Mode
-
-```bash
-# Run with debug enabled
-export DASH_DEBUG=true
-python app.py
-```
+- **Passwords**: Stored as SHA-256 hashes, never in plain text
+- **Sessions**: Expire after 10 minutes of inactivity
+- **Keys**: Keep API keys and secret keys secure
+- **Production**: Always use strong passwords and secret keys in production
 
 ## 🤝 Contributing
 
@@ -243,4 +275,4 @@ This project is licensed under the MIT License. See `LICENSE` file for details.
 
 ---
 
-**Enjoy exploring knowledge visually! 🚀**
+**Secure knowledge exploration! 🔐🚀**
