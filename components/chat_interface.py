@@ -1,0 +1,194 @@
+# ./components/chat_interface.py
+# Interfaz de chat para el agente RAG conversacional
+
+from dash import dcc, html, Input, Output, State
+import dash_bootstrap_components as dbc
+
+def chat_interface():
+    """
+    Componente de interfaz de chat para hacer preguntas al agente RAG.
+    """
+    return dbc.Container([
+        # Header del chat
+        dbc.Row([
+            dbc.Col([
+                html.H3([
+                    "🤖 Agente RAG Conversacional",
+                    html.Small(" - Pregunta sobre los documentos procesados", 
+                              className="text-muted ms-2")
+                ], className="mb-3"),
+                html.P([
+                    "Haz preguntas sobre el contenido de los documentos que has subido. ",
+                    "Podrás ver cada paso del proceso RAG en tiempo real."
+                ], className="text-muted mb-4")
+            ])
+        ]),
+        
+        # Input para la pregunta
+        dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardBody([
+                        html.H5("💬 Haz tu pregunta", className="card-title mb-3"),
+                        dbc.InputGroup([
+                            dbc.Input(
+                                id="chat-input",
+                                type="text",
+                                placeholder="Ejemplo: ¿Qué información hay sobre Carlos Sainz?",
+                                style={"fontSize": "16px"}
+                            ),
+                            dbc.Button(
+                                "Enviar",
+                                id="chat-send-btn",
+                                n_clicks=0,
+                                color="primary",
+                                className="ms-2"
+                            )
+                        ], className="mb-3"),
+                        
+                        # Selector de LLM
+                        dbc.Row([
+                            dbc.Col([
+                                html.Label("Modelo LLM:", className="form-label"),
+                                dcc.Dropdown(
+                                    id="chat-llm-selector",
+                                    options=[
+                                        {"label": "OpenAI GPT-4o", "value": "openai"},
+                                        {"label": "Claude Sonnet 4", "value": "claude"}
+                                    ],
+                                    value="openai",
+                                    clearable=False
+                                )
+                            ], width=6),
+                            dbc.Col([
+                                html.Label("Estado:", className="form-label"),
+                                html.Div(
+                                    id="chat-status",
+                                    children="💤 Esperando pregunta...",
+                                    className="form-control-plaintext text-muted"
+                                )
+                            ], width=6)
+                        ])
+                    ])
+                ], className="shadow-sm")
+            ])
+        ], className="mb-4"),
+        
+        # Área de conversación
+        dbc.Row([
+            dbc.Col([
+                html.Div(
+                    id="chat-conversation",
+                    children=[
+                        dbc.Alert([
+                            html.I(className="fas fa-info-circle me-2"),
+                            "Comienza haciendo una pregunta sobre los documentos que has procesado. ",
+                            "Verás todo el proceso RAG paso a paso."
+                        ], color="info", className="d-flex align-items-center")
+                    ],
+                    style={
+                        "minHeight": "400px",
+                        "maxHeight": "600px", 
+                        "overflowY": "auto",
+                        "padding": "20px",
+                        "backgroundColor": "#f8f9fa",
+                        "borderRadius": "10px",
+                        "border": "1px solid #dee2e6"
+                    }
+                )
+            ])
+        ])
+    ], fluid=True)
+
+def create_user_message(question: str) -> dbc.Card:
+    """
+    Crea un mensaje del usuario en el chat.
+    
+    Args:
+        question: Pregunta del usuario
+        
+    Returns:
+        Componente de mensaje del usuario
+    """
+    return dbc.Card([
+        dbc.CardBody([
+            html.Div([
+                html.Strong("👤 Tu pregunta:", className="text-primary"),
+                html.P(question, className="mb-0 mt-2")
+            ])
+        ])
+    ], className="mb-3 ms-5", color="light")
+
+def create_bot_message(answer: str, show_process: bool = False) -> dbc.Card:
+    """
+    Crea un mensaje del bot en el chat.
+    
+    Args:
+        answer: Respuesta del agente
+        show_process: Si mostrar el botón para ver el proceso
+        
+    Returns:
+        Componente de mensaje del bot
+    """
+    card_content = [
+        html.Div([
+            html.Strong("🤖 Respuesta del Agente:", className="text-success"),
+            html.P(answer, className="mb-0 mt-2", style={"whiteSpace": "pre-wrap"})
+        ])
+    ]
+    
+    if show_process:
+        card_content.append(
+            html.Div([
+                dbc.Button(
+                    [html.I(className="fas fa-cogs me-2"), "Ver Proceso RAG Detallado"],
+                    id="show-process-btn",
+                    color="outline-info",
+                    size="sm",
+                    className="mt-2"
+                )
+            ])
+        )
+    
+    return dbc.Card([
+        dbc.CardBody(card_content)
+    ], className="mb-3 me-5", color="success", outline=True)
+
+def create_loading_message() -> dbc.Card:
+    """
+    Crea un mensaje de carga mientras se procesa la pregunta.
+    
+    Returns:
+        Componente de mensaje de carga
+    """
+    return dbc.Card([
+        dbc.CardBody([
+            html.Div([
+                dbc.Spinner(size="sm", spinnerClassName="me-2"),
+                html.Strong("🤖 Procesando tu pregunta...", className="text-info"),
+                html.P([
+                    "Estoy buscando información relevante en los documentos y ",
+                    "construyendo una respuesta basada en el contenido disponible."
+                ], className="mb-0 mt-2 text-muted")
+            ])
+        ])
+    ], className="mb-3 me-5", color="info", outline=True)
+
+def create_error_message(error: str) -> dbc.Card:
+    """
+    Crea un mensaje de error en el chat.
+    
+    Args:
+        error: Mensaje de error
+        
+    Returns:
+        Componente de mensaje de error
+    """
+    return dbc.Card([
+        dbc.CardBody([
+            html.Div([
+                html.Strong("❌ Error:", className="text-danger"),
+                html.P(error, className="mb-0 mt-2")
+            ])
+        ])
+    ], className="mb-3 me-5", color="danger", outline=True)
