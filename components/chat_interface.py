@@ -14,13 +14,15 @@ def chat_interface():
             dbc.Col([
                 html.H3([
                     "🤖 Agente RAG Conversacional",
-                    html.Small(" - Pregunta sobre los documentos procesados", 
-                              className="text-muted ms-2")
-                ], className="mb-3"),
+                    html.Br(),
+                    html.Small("Pregunta sobre los documentos procesados", 
+                              className="ms-2", style={'color': '#0927ac', 'fontSize': '1.3rem'})   
+                ], className="mb-3 chat-rag-title", style={'fontSize': '2rem'}),   
                 html.P([
                     "Haz preguntas sobre el contenido de los documentos que has subido. ",
                     "Podrás ver cada paso del proceso RAG en tiempo real."
-                ], className="text-muted mb-4")
+                ], className="mb-4",
+                style={'color': '#041736'})
             ])
         ]),
         
@@ -28,14 +30,14 @@ def chat_interface():
         dbc.Row([
             dbc.Col([
                 dbc.Card([
-                    dbc.CardBody([
-                        html.H5("💬 Haz tu pregunta", className="card-title mb-3"),
+                    dbc.CardBody(style={'backgroundColor': '#0a0e1a', 'padding': '20px', 'borderRadius': '16px'}, children=[
+                        html.H5("💬 Haz tu pregunta", className="card-title mb-3 text-light"),
                         dbc.InputGroup([
                             dbc.Input(
                                 id="chat-input",
                                 type="text",
                                 placeholder="Ejemplo: ¿Qué información hay sobre Carlos Sainz?",
-                                style={"fontSize": "16px"}
+                                style={"fontSize": "14px", "backgroundColor": "#1a2035", "color": "#ffffff", "border": "1px solid #334155"}
                             ),
                             dbc.Button(
                                 "Enviar",
@@ -46,10 +48,10 @@ def chat_interface():
                             )
                         ], className="mb-3"),
                         
-                        # Selector de LLM
+                        # Selector de LLM y estado
                         dbc.Row([
                             dbc.Col([
-                                html.Label("Modelo LLM:", className="form-label"),
+                                html.Label("Modelo LLM:", className="form-label text-light"),
                                 dcc.Dropdown(
                                     id="chat-llm-selector",
                                     options=[
@@ -57,15 +59,16 @@ def chat_interface():
                                         {"label": "Claude Sonnet 4", "value": "claude"}
                                     ],
                                     value="openai",
-                                    clearable=False
+                                    clearable=False,
+                                    className="bg-dark text-light"
                                 )
                             ], width=6),
                             dbc.Col([
-                                html.Label("Estado:", className="form-label"),
+                                html.Label("Estado:", className="form-label text-light"),
                                 html.Div(
                                     id="chat-status",
                                     children="💤 Esperando pregunta...",
-                                    className="form-control-plaintext text-muted"
+                                    className="form-control-plaintext text-light"
                                 )
                             ], width=6)
                         ])

@@ -10,12 +10,7 @@ def layout():
     Define el layout para la página de chat RAG educativo.
     """
     return dbc.Container([
-        # Puedes añadir un dcc.Store aquí para rag-process-data si no lo tienes globalmente
-        # dcc.Store(id='rag-process-data'), # Necesario para los callbacks del chat
 
-        dbc.Row([
-            html.H2("🤖 Chat RAG Educativo", className="my-4 text-center"),
-        ]),
         dbc.Row([
             dbc.Col(
                 chat_interface(),  # Tu componente de interfaz de chat
@@ -36,6 +31,7 @@ def layout():
                 }
             )
         ],
+        className="mt-4",  # Añadido margen superior aquí
         # className="g-0" # Descomenta si quieres que las columnas se peguen sin espacio
         style={"height": "calc(100vh - 100px)"} # Altura total de la fila de contenido
         ),
@@ -46,4 +42,4 @@ def layout():
         # Por la estructura de tus callbacks, parece que es mejor que esté disponible cuando esta página cargue.
         dcc.Store(id='rag-process-data')
 
-    ], fluid=True, style={"height": "100vh", "paddingTop": "20px"})
+    ], fluid=True, style={"height": "100vh", "paddingTop": "20px", "background": "#f1f5f9"})

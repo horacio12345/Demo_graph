@@ -733,21 +733,6 @@ h1, h2, h3, h4, h5, h6 {
 /* ========== FIX PARA TEXTOS DE LA BARRA LATERAL ========== */
 /* Agregar al FINAL del style.css */
 
-/* Fix específico para el título principal */
-h2 {
-    color: #1e293b !important;  /* Color oscuro para el título */
-}
-
-/* Fix para etiquetas en la barra lateral (fondo claro) */
-.col-3 label, 
-.col-3 .form-label, 
-.col-3 .control-label,
-.sidebar label,
-.sidebar .form-label {
-    color: #1e293b !important;  /* Color oscuro para contraste con fondo claro */
-    font-weight: 600 !important;
-}
-
 /* Si tienes una clase específica para la sidebar, usar esto en su lugar: */
 .sidebar-container label,
 .sidebar-container .form-label,
@@ -789,4 +774,9 @@ div[class*="Select"] * {
 #llm-selector * {
     font-size: 12px !important;
     font-weight: 400 !important;
+}
+
+
+.chat-rag-title {
+    color: #1e293b !important;  /* O el color que prefieras */
 }

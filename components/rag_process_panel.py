@@ -11,20 +11,41 @@ def rag_process_panel():
     Panel principal que muestra el proceso RAG educativo.
     """
     return dbc.Card([
-        dbc.CardHeader([
-            html.H5([
+        # Reemplazamos dbc.CardHeader con un div personalizado
+        html.Div([
+            html.Div([
                 html.I(className="fas fa-cogs me-2"),
-                "Proceso RAG en Tiempo Real"
-            ], className="mb-0 text-primary")
-        ]),
+                html.Span("Proceso RAG en Tiempo Real", style={
+                    'color': '#ffffff',
+                    'fontSize': '1.5rem',
+                    'fontWeight': '500',
+                    'verticalAlign': 'middle'
+                })
+            ], style={'padding': '20px'})
+        ], style={
+            'backgroundColor': '#0a0e1a',
+            'borderRadius': '16px 16px 0 0',
+            'width': '100%',
+            'boxSizing': 'border-box',
+            'border': 'none',  
+            'borderBottom': 'none'  
+        }),
         dbc.CardBody([
             html.Div(
                 id="rag-process-content",
                 children=[create_initial_state()],
                 style={"minHeight": "600px"}
             )
-        ])
-    ], className="shadow-sm h-100")
+        ], style={
+            'backgroundColor': '#0a0e1a',
+            'borderRadius': '0 0 16px 16px',
+            'border': 'none'  
+        })
+    ], className="shadow-sm h-100", style={
+        'border': 'none',  
+        'boxShadow': 'none',  
+        'overflow': 'hidden'
+    })
 
 def create_initial_state():
     """
@@ -32,37 +53,37 @@ def create_initial_state():
     """
     return html.Div([
         html.Div([
-            html.I(className="fas fa-play-circle fa-3x text-muted mb-3"),
-            html.H5("Sistema RAG Preparado", className="text-muted"),
+            html.I(className="fas fa-play-circle fa-3x text-light mb-3"),
+            html.H5("Sistema RAG Preparado", className="text-light"),
             html.P([
                 "Haz una pregunta en el chat para ver el proceso completo de ",
                 "Retrieval-Augmented Generation paso a paso."
-            ], className="text-muted text-center")
+            ], className="text-light-50 text-center")
         ], className="text-center py-5"),
         
         # Explicación de los pasos
         html.Div([
-            html.H6("🔍 Pasos del Proceso RAG:", className="text-secondary mb-3"),
-            create_step_explanation("1", "Vectorización", "Tu pregunta se convierte en números", "secondary"),
-            create_step_explanation("2", "Búsqueda", "Se buscan fragmentos similares", "secondary"),  
-            create_step_explanation("3", "Contexto", "Se construye el contexto relevante", "secondary"),
-            create_step_explanation("4", "Generación", "El LLM crea la respuesta final", "secondary")
+            html.H6("🔍 Pasos del Proceso RAG:", className="text-light mb-3"),
+            create_step_explanation("1", "Vectorización", "Tu pregunta se convierte en números", "info"),
+            create_step_explanation("2", "Búsqueda", "Se buscan fragmentos similares", "info"),  
+            create_step_explanation("3", "Contexto", "Se construye el contexto relevante", "info"),
+            create_step_explanation("4", "Generación", "El LLM crea la respuesta final", "info")
         ], className="mt-4")
-    ])
+    ], className="text-light")
 
-def create_step_explanation(number: str, title: str, description: str, color: str = "secondary"):
+def create_step_explanation(number: str, title: str, description: str, color: str = "info"):
     """
     Crea una explicación visual de un paso del proceso.
     """
     return dbc.Card([
         dbc.CardBody([
             html.Div([
-                dbc.Badge(number, color=color, className="me-2", pill=True),
-                html.Strong(title, className="me-2"),
-                html.Small(description, className="text-muted")
+                dbc.Badge(number, color=color, className="me-2", pill=True, style={'fontSize': '0.9em'}),
+                html.Strong(title, className="me-2 text-light"),
+                html.Small(description, className="text-light-50")
             ])
         ], className="py-2")
-    ], className="mb-2", outline=True, color=color)
+    ], className="mb-2", outline=True, color=color, style={'backgroundColor': 'transparent', 'borderColor': '#334155'})
 
 def create_processing_state():
     """
@@ -397,13 +418,20 @@ def create_process_step(number: str, title: str, status: str, content: List):
     }
     
     return dbc.Card([
-        dbc.CardHeader([
-            html.H6([
+        # Reemplazamos dbc.CardHeader con un div personalizado
+        html.Div([
+            html.Div([
                 html.I(className=f"{icon_map.get(status, 'fas fa-circle')} me-2"),
                 dbc.Badge(number, color=color_map.get(status, "secondary"), className="me-2", pill=True),
                 title
-            ], className="mb-0")
-        ]),
+            ], style={'padding': '20px'})
+        ], style={
+            'backgroundColor': '#000000',
+            'borderRadius': '16px 16px 0 0',
+            'borderBottom': '1px solid #000000',
+            'width': '100%',
+            'boxSizing': 'border-box'
+        }),
         dbc.CardBody(content)
     ], color=color_map.get(status, "light"), outline=True, className="mb-3")
 
