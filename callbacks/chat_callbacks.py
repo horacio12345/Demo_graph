@@ -36,77 +36,79 @@ def register_chat_callbacks(app):
          State("rag-process-data", "data")],
         prevent_initial_call=True
     )
-    def handle_chat_message(n_clicks, question, llm_method, current_conversation, current_rag_data):
+    def handle_chat_message(n_clicks, question, llm_method, current_conversation_children, current_rag_data):
         if not n_clicks or not question or not question.strip():
             raise PreventUpdate
         
         question = question.strip()
-        logger.info(f"Processing chat question: {question[:50]}...")
+        logger.info(f"Processing chat question: {question[:50]} with LLM: {llm_method}")
         
+        # Determinar la conversación actual, manejando el placeholder inicial
+        new_conversation = []
+        if current_conversation_children and isinstance(current_conversation_children, list):
+            is_placeholder = False
+            if len(current_conversation_children) == 1 and isinstance(current_conversation_children[0], dict):
+                try:
+                    component_props = current_conversation_children[0].get('props', {})
+                    if component_props:
+                        children_of_component = component_props.get('children', [])
+                        if children_of_component and isinstance(children_of_component, list) and len(children_of_component) == 1:
+                            p_component = children_of_component[0]
+                            if isinstance(p_component, dict):
+                                p_props = p_component.get('props', {})
+                                if p_props:
+                                    placeholder_text = p_props.get('children', '')
+                                    if placeholder_text == "Aquí verás la respuesta a tu pregunta...":
+                                        is_placeholder = True
+                except Exception as e:
+                    logger.debug(f"Error checking placeholder: {e}")
+                    pass 
+            if not is_placeholder:
+                new_conversation = current_conversation_children.copy()
+        
+        # Añadir mensaje del usuario a la conversación
+        new_conversation.append(create_user_message(question))
+        
+        # (Opcional) Aquí se podría añadir un mensaje de carga si se desea una respuesta en dos pasos
+        # Por ahora, se llamará directamente al orchestrator.
+
         try:
-            new_conversation = current_conversation.copy() if current_conversation else []
-            new_conversation.append(create_user_message(question))
-            new_conversation.append(create_loading_message())
-            
-            # Ejecutar proceso RAG directamente aquí
-            try:
-                result = rag_orchestrator.process_question(question, llm_method or "openai")
-                logger.info(f"RAG processing completed: success={result.get('success')}")
+            # Llamar al RAG orchestrator para obtener la respuesta del LLM
+            logger.info(f"Calling RAG orchestrator for: {question[:30]}")
+            result = rag_orchestrator.process_question(question, llm_method or "default_llm") # Asegúrate que llm_method tenga un valor
+            logger.info(f"RAG orchestrator result: Success={result.get('success')}")
+
+            if result.get("success"):
+                bot_answer = result.get("answer", "No se pudo generar una respuesta del LLM.")
+                new_conversation.append(create_bot_message(bot_answer, show_process=True))
                 
-                # Remover mensaje de loading
-                if new_conversation and "Procesando tu pregunta" in str(new_conversation[-1]):
-                    new_conversation.pop()
-                
-                if result.get("success"):
-                    answer = result.get("final_answer", "No se pudo generar respuesta")
-                    new_conversation.append(create_bot_message(answer, show_process=True))
-                    process_panel = create_complete_process_view(result)
-                    status = "✅ Respuesta generada correctamente"
-                else:
-                    error_msg = result.get("error", "Error desconocido en el proceso RAG")
-                    new_conversation.append(create_error_message(error_msg))
-                    from components.rag_process_panel import create_error_view
-                    process_panel = create_error_view(error_msg)
-                    status = "❌ Error en el proceso RAG"
-                
-                updated_rag_data = result.copy()
-                updated_rag_data["processing"] = False
-                
-                return (new_conversation, status, process_panel, updated_rag_data, "")
-                
-            except Exception as e:
-                logger.error(f"Error in RAG processing: {e}")
-                if new_conversation and "Procesando tu pregunta" in str(new_conversation[-1]):
-                    new_conversation.pop()
-                error_msg = f"Error procesando pregunta: {str(e)}"
+                rag_steps_data = result.get("rag_steps", {})
+                rag_panel_content = create_complete_process_view(rag_steps_data)
+                status_message = "✅ Pregunta respondida por el LLM"
+                rag_data_to_store = rag_steps_data
+            else:
+                error_msg = result.get("error", "Error desconocido del RAG orchestrator.")
                 new_conversation.append(create_error_message(error_msg))
-                from components.rag_process_panel import create_error_view
-                error_panel = create_error_view(error_msg)
-                return (new_conversation, "❌ Error en procesamiento", error_panel, {"error": str(e), "processing": False}, question)
-                
+                rag_panel_content = create_initial_state() # O un panel de error específico
+                status_message = f"❌ Error RAG: {error_msg[:50]}"
+                rag_data_to_store = {"error": error_msg}
+        
         except Exception as e:
-            logger.error(f"Error in chat callback: {e}")
-            error_conversation = current_conversation.copy() if current_conversation else []
-            error_conversation.append(create_error_message(f"Error procesando mensaje: {str(e)}"))
-            return (
-                error_conversation,
-                "❌ Error procesando mensaje",
-                create_initial_state(),
-                {},
-                question
-            )
-    
-    @app.callback(
-        Output("chat-input", "value", allow_duplicate=True),
-        Input("chat-input", "n_submit"),
-        State("chat-input", "value"),
-        prevent_initial_call=True
-    )
-    def handle_enter_key(n_submit, current_value):
-        if n_submit and current_value and current_value.strip():
-            return current_value
-        raise PreventUpdate
-    
+            logger.error(f"Exception calling RAG orchestrator or processing its result: {e}", exc_info=True)
+            critical_error_msg = f"Error crítico en el servidor: {str(e)[:100]}"
+            new_conversation.append(create_error_message(critical_error_msg))
+            rag_panel_content = create_initial_state() # O un panel de error crítico
+            status_message = "❌ Error Crítico en el Servidor"
+            rag_data_to_store = {"error": critical_error_msg}
+
+        return (
+            new_conversation,
+            status_message,
+            rag_panel_content,
+            rag_data_to_store,
+            ""  # Limpiar el campo de entrada
+        )
+
     @app.callback(
         Output("chat-send-btn", "n_clicks", allow_duplicate=True),
         Input("chat-input", "n_submit"),
@@ -116,6 +118,17 @@ def register_chat_callbacks(app):
     def trigger_send_on_enter(n_submit, current_clicks):
         if n_submit:
             return (current_clicks or 0) + 1
+        raise PreventUpdate
+
+    @app.callback(
+        Output("chat-input", "value", allow_duplicate=True),
+        Input("chat-input", "n_submit"),
+        State("chat-input", "value"),
+        prevent_initial_call=True
+    )
+    def handle_enter_key(n_submit, current_value):
+        if n_submit and current_value and current_value.strip():
+            return current_value
         raise PreventUpdate
     
     @app.callback(

@@ -780,3 +780,194 @@ div[class*="Select"] * {
 .chat-rag-title {
     color: #1e293b !important;  /* O el color que prefieras */
 }
+
+
+.nav-link-custom {
+    color: #f5f6fc !important;
+    font-weight: 500;
+}
+
+.nav-link-custom:hover {
+    color: #a3b0f1 !important;  /* Color al pasar el ratón */
+}
+
+
+/* Estilos para el menú desplegable "Cuenta" */
+.dropdown-toggle.nav-link-custom {
+    color: #f5f6fc !important;
+    font-weight: 500;
+    background-color: transparent !important;
+    border: none !important;
+    padding: 0.5rem 1rem !important;
+}
+
+.dropdown-toggle.nav-link-custom:hover {
+    color: #a3b0f1 !important;
+    background-color: transparent !important;
+}
+
+/* Estilo para el menú desplegable */
+.dropdown-menu {
+    background: rgba(30, 41, 59, 0.98) !important;
+    border: 1px solid rgba(96, 165, 250, 0.3) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(20px) !important;
+    padding: 8px 0 !important;
+}
+
+/* Estilo para los ítems del menú */
+.dropdown-item {
+    color: #f5f6fc !important;
+    padding: 8px 16px !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+}
+
+.dropdown-item:hover {
+    background: rgba(96, 165, 250, 0.2) !important;
+    color: #a3b0f1 !important;
+}
+
+/* Estilo para el divider */
+.dropdown-divider {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    margin: 4px 0 !important;
+}
+
+/* Estilo para el header del menú desplegable */
+.dropdown-header {
+    color: #a3b0f1 !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    padding: 8px 16px !important;
+    white-space: nowrap !important;
+}
+
+/* Asegurar que el texto no se desborde */
+.dropdown-item, .dropdown-header {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 240px !important;
+}/* Estilos para el menú desplegable "Cuenta" */
+.dropdown-toggle.nav-link-custom {
+    color: #f5f6fc !important;
+    font-weight: 500;
+    background-color: transparent !important;
+    border: none !important;
+    padding: 0.5rem 1rem !important;
+}
+
+.dropdown-toggle.nav-link-custom:hover {
+    color: #a3b0f1 !important;
+    background-color: transparent !important;
+}
+
+/* Estilo para el menú desplegable */
+.dropdown-menu {
+    background: rgba(30, 41, 59, 0.98) !important;
+    border: 1px solid rgba(96, 165, 250, 0.3) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(20px) !important;
+    padding: 8px 0 !important;
+}
+
+/* Estilo para los ítems del menú */
+.dropdown-item {
+    color: #f5f6fc !important;
+    padding: 8px 16px !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+}
+
+.dropdown-item:hover {
+    background: rgba(96, 165, 250, 0.2) !important;
+    color: #a3b0f1 !important;
+}
+
+/* Estilo para el divider */
+.dropdown-divider {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    margin: 4px 0 !important;
+}
+
+/* Estilo para el header del menú desplegable */
+.dropdown-header {
+    color: #a3b0f1 !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    padding: 8px 16px !important;
+    white-space: nowrap !important;
+}
+
+/* Asegurar que el texto no se desborde */
+.dropdown-item, .dropdown-header {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 240px !important;
+}/* ===== ESTILOS ESPECÍFICOS PARA MENSAJES DE CHAT ===== */
+
+/* Anulación general para tarjetas dentro del área de conversación */
+#chat-conversation .card {
+    background-color: #ffffff !important; /* Fondo blanco por defecto para tarjetas de chat */
+    border: 1px solid #dee2e6 !important;   /* Borde estándar */
+    color: #212529 !important;             /* Texto oscuro estándar */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important; /* Sombra más suave para mensajes */
+    backdrop-filter: none !important;       /* Sin efecto de desenfoque para mensajes */
+    margin-bottom: 0.75rem !important;      /* Margen inferior consistente */
+}
+
+#chat-conversation .card .card-body {
+    background-color: transparent !important; /* Cuerpo de la tarjeta transparente */
+    padding: 0.75rem 1rem !important;         /* Padding consistente */
+}
+
+/* Mensaje del Usuario: dbc.Card(color="light") -> clase .bg-light */
+#chat-conversation .card.bg-light {
+    background-color: #f8f9fa !important; /* Gris muy claro para mensajes de usuario */
+    border-color: #dee2e6 !important;
+}
+#chat-conversation .card.bg-light strong.text-primary { /* "👤 Tu pregunta:" */
+    color: #004085 !important; /* Azul más oscuro para contraste */
+}
+
+/* Mensaje del Bot: dbc.Card(color="success", outline=True) -> clases .border-success .text-success */
+#chat-conversation .card.border-success {
+    background-color: #d1e7dd !important; /* Fondo verde claro */
+    border-color: #badbcc !important;     /* Borde verde */
+    color: #0f5132 !important;            /* Texto verde oscuro */
+}
+#chat-conversation .card.border-success strong.text-success { /* "🤖 Respuesta del Agente:" */
+    color: #0a3622 !important; /* Verde aún más oscuro para el título */
+}
+
+/* Mensaje de Carga: dbc.Card(color="info", outline=True) -> .border-info .text-info */
+#chat-conversation .card.border-info {
+    background-color: #cff4fc !important; /* Fondo azul claro */
+    border-color: #b6effb !important;     /* Borde azul */
+    color: #055160 !important;            /* Texto azul oscuro */
+}
+#chat-conversation .card.border-info strong.text-info { /* "🤖 Procesando..." */
+    color: #032830 !important; /* Azul aún más oscuro */
+}
+
+/* Mensaje de Error: dbc.Card(color="danger", outline=True) -> .border-danger .text-danger */
+#chat-conversation .card.border-danger {
+    background-color: #f8d7da !important; /* Fondo rojo claro */
+    border-color: #f5c2c7 !important;     /* Borde rojo */
+    color: #842029 !important;            /* Texto rojo oscuro */
+}
+#chat-conversation .card.border-danger strong.text-danger { /* "❌ Error:" */
+    color: #58151c !important; /* Rojo aún más oscuro */
+}
+
+/* Asegurar que el texto del párrafo dentro de las tarjetas de chat sea legible */
+#chat-conversation .card p {
+    color: inherit !important; /* Heredar del color de texto principal de la tarjeta */
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 0 !important; /* Evitar márgenes extra en los párrafos */
+}

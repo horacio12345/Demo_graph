@@ -17,12 +17,8 @@ def chat_interface():
                     html.Br(),
                     html.Small("Pregunta sobre los documentos procesados", 
                               className="ms-2", style={'color': '#0927ac', 'fontSize': '1.3rem'})   
-                ], className="mb-3 chat-rag-title", style={'fontSize': '2rem'}),   
-                html.P([
-                    "Haz preguntas sobre el contenido de los documentos que has subido. ",
-                    "Podrás ver cada paso del proceso RAG en tiempo real."
-                ], className="mb-4",
-                style={'color': '#041736'})
+                ], className="mb-3 chat-rag-title", style={'fontSize': '2rem'}),
+                # Se eliminó el párrafo redundante
             ])
         ]),
         
@@ -83,20 +79,33 @@ def chat_interface():
                 html.Div(
                     id="chat-conversation",
                     children=[
-                        dbc.Alert([
-                            html.I(className="fas fa-info-circle me-2"),
-                            "Comienza haciendo una pregunta sobre los documentos que has procesado. ",
-                            "Verás todo el proceso RAG paso a paso."
-                        ], color="info", className="d-flex align-items-center")
+                        html.Div([
+                            html.P("Aquí verás la respuesta a tu pregunta...",
+                                  className="text-muted",
+                                  style={
+                                      'fontStyle': 'italic',
+                                      'opacity': '0.7',
+                                      'fontSize': '1rem',
+                                      'position': 'absolute',
+                                      'top': '50%',
+                                      'left': '50%',
+                                      'transform': 'translate(-50%, -50%)',
+                                      'width': '100%',
+                                      'padding': '0 20px',
+                                      'textAlign': 'left'
+                                  })
+                        ], className="w-100 h-100 position-relative")
                     ],
                     style={
-                        "minHeight": "400px",
-                        "maxHeight": "600px", 
+                        "minHeight": "260px",
+                        "maxHeight": "calc(100vh - 210px)",  
                         "overflowY": "auto",
                         "padding": "20px",
-                        "backgroundColor": "#f8f9fa",
+                        "backgroundColor": "#ffffff",
                         "borderRadius": "10px",
-                        "border": "1px solid #dee2e6"
+                        "border": "1px solid #dee2e6",
+                        "position": "relative",  
+                        "marginBottom": "20px"  
                     }
                 )
             ])

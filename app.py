@@ -51,7 +51,7 @@ server.secret_key = os.environ.get('FLASK_SECRET_KEY', 'cambiar_en_produccion_cl
 server.config['SESSION_COOKIE_EXPIRES'] = None
 server.config['SESSION_COOKIE_HTTPONLY'] = True
 server.config['SESSION_COOKIE_SECURE'] = True if os.environ.get('RAILWAY_ENVIRONMENT_NAME') else False
-server.config['PERMANENT_SESSION_LIFETIME'] = 600
+server.config['PERMANENT_SESSION_LIFETIME'] = 1800
 
 # ⭐ CONFIGURAR RUTAS DE AUTENTICACIÓN ⭐
 setup_auth_routes(app)
@@ -91,8 +91,8 @@ def get_base_layout_with_navbar():
 
     navbar = dbc.NavbarSimple(
         children=[
-            dbc.NavItem(dbc.NavLink("Procesamiento y Grafo", href="/")),
-            dbc.NavItem(dbc.NavLink("Chat RAG Educativo", href="/chat")),
+            dbc.NavItem(dbc.NavLink("Procesamiento y Grafo", href="/", className="nav-link-custom")),
+            dbc.NavItem(dbc.NavLink("Chat RAG", href="/chat", className="nav-link-custom")),
             dbc.DropdownMenu(
                 children=[
                     dbc.DropdownMenuItem(f"👤 Usuario: {current_user}", header=True),
@@ -103,7 +103,14 @@ def get_base_layout_with_navbar():
                 in_navbar=True,
                 label="Cuenta",
                 align_end=True,
-                color="light"
+                toggle_style={
+                    "color": "#f5f6fc",
+                    "fontWeight": "500",
+                    "backgroundColor": "transparent",
+                    "border": "none"
+                },
+                toggleClassName="nav-link-custom",
+                menu_variant="dark"
             ),
         ],
         brand="RAG Demo App",
@@ -120,7 +127,6 @@ def get_base_layout_with_navbar():
     ])
 
 
-# ---- MODIFICADA: Función para servir el layout principal o el de login ----
 def serve_layout():
     """Función que decide qué layout servir según autenticación."""
     print("DEBUG: Llamando a serve_layout()")

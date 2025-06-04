@@ -16,7 +16,7 @@ def rag_process_panel():
             html.Div([
                 html.I(className="fas fa-cogs me-2"),
                 html.Span("Proceso RAG en Tiempo Real", style={
-                    'color': '#ffffff',
+                    'color': '#a3b0f1',
                     'fontSize': '1.5rem',
                     'fontWeight': '500',
                     'verticalAlign': 'middle'
@@ -56,10 +56,9 @@ def create_initial_state():
             html.I(className="fas fa-play-circle fa-3x text-light mb-3"),
             html.H5("Sistema RAG Preparado", className="text-light"),
             html.P([
-                "Haz una pregunta en el chat para ver el proceso completo de ",
-                "Retrieval-Augmented Generation paso a paso."
+                "Descripción del proceso de Retrieval-Augmented Generation paso a paso."
             ], className="text-light-50 text-center")
-        ], className="text-center py-5"),
+        ], className="text-center py-3"),
         
         # Explicación de los pasos
         html.Div([
@@ -68,7 +67,7 @@ def create_initial_state():
             create_step_explanation("2", "Búsqueda", "Se buscan fragmentos similares", "info"),  
             create_step_explanation("3", "Contexto", "Se construye el contexto relevante", "info"),
             create_step_explanation("4", "Generación", "El LLM crea la respuesta final", "info")
-        ], className="mt-4")
+        ], className="mt-2")
     ], className="text-light")
 
 def create_step_explanation(number: str, title: str, description: str, color: str = "info"):

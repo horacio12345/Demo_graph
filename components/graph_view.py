@@ -12,7 +12,7 @@ def graph_view(elements=[], layout_name="cose", style=None, stylesheet=None):
     # Estilo del contenedor - FONDO NEGRO GARANTIZADO
     default_style = {
         "width": "100%",
-        "height": "700px",
+        "height": "630px",
         "backgroundColor": "#0a0e1a",  # Negro profundo
         "borderRadius": "16px",
         "border": "2px solid #334155",
