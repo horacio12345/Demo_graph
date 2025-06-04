@@ -1,5 +1,5 @@
 # ./callbacks/chat_callbacks.py
-# Callbacks para el sistema de chat RAG educativo - VERSIÓN CORREGIDA
+# Callbacks para el sistema de chat RAG educativo - IMPORTACIONES CORREGIDAS
 
 from dash import Input, Output, State, callback_context, no_update
 from dash.exceptions import PreventUpdate
@@ -13,11 +13,9 @@ from components.chat_interface import (
     create_error_message
 )
 from components.rag_process_panel import (
-    create_processing_state,
     create_complete_process_view,
     create_initial_state
 )
-from core.rag_orchestrator import rag_orchestrator
 
 logger = logging.getLogger(__name__)
 
@@ -41,63 +39,82 @@ def register_chat_callbacks(app):
             raise PreventUpdate
         
         question = question.strip()
+        llm_method = llm_method or "openai"  # Asegurar que no sea None
         logger.info(f"Processing chat question: {question[:50]} with LLM: {llm_method}")
         
         # Determinar la conversación actual, manejando el placeholder inicial
         new_conversation = []
         if current_conversation_children and isinstance(current_conversation_children, list):
             is_placeholder = False
-            if len(current_conversation_children) == 1 and isinstance(current_conversation_children[0], dict):
-                try:
-                    component_props = current_conversation_children[0].get('props', {})
-                    if component_props:
-                        children_of_component = component_props.get('children', [])
-                        if children_of_component and isinstance(children_of_component, list) and len(children_of_component) == 1:
-                            p_component = children_of_component[0]
-                            if isinstance(p_component, dict):
-                                p_props = p_component.get('props', {})
-                                if p_props:
-                                    placeholder_text = p_props.get('children', '')
-                                    if placeholder_text == "Aquí verás la respuesta a tu pregunta...":
+            try:
+                # Verificar si es el placeholder inicial
+                if len(current_conversation_children) == 1:
+                    first_element = current_conversation_children[0]
+                    if isinstance(first_element, dict):
+                        props = first_element.get('props', {})
+                        if 'children' in props:
+                            children = props['children']
+                            if isinstance(children, list) and len(children) == 1:
+                                p_element = children[0]
+                                if isinstance(p_element, dict):
+                                    p_props = p_element.get('props', {})
+                                    if p_props.get('children') == "Aquí verás la respuesta a tu pregunta...":
                                         is_placeholder = True
-                except Exception as e:
-                    logger.debug(f"Error checking placeholder: {e}")
-                    pass 
+            except Exception as e:
+                logger.debug(f"Error checking placeholder: {e}")
+                is_placeholder = False
+            
             if not is_placeholder:
                 new_conversation = current_conversation_children.copy()
         
         # Añadir mensaje del usuario a la conversación
         new_conversation.append(create_user_message(question))
         
-        # (Opcional) Aquí se podría añadir un mensaje de carga si se desea una respuesta en dos pasos
-        # Por ahora, se llamará directamente al orchestrator.
-
         try:
+            # Importar el orquestrador aquí para evitar problemas circulares
+            from core.rag_orchestrator import rag_orchestrator
+            
             # Llamar al RAG orchestrator para obtener la respuesta del LLM
             logger.info(f"Calling RAG orchestrator for: {question[:30]}")
-            result = rag_orchestrator.process_question(question, llm_method or "default_llm") # Asegúrate que llm_method tenga un valor
+            result = rag_orchestrator.process_question(question, llm_method)
             logger.info(f"RAG orchestrator result: Success={result.get('success')}")
 
             if result.get("success"):
-                bot_answer = result.get("answer", "No se pudo generar una respuesta del LLM.")
+                bot_answer = result.get("final_answer", "No se pudo generar una respuesta del LLM.")
+                
+                # VERIFICAR QUE LA RESPUESTA NO ESTÉ VACÍA
+                if not bot_answer or not bot_answer.strip():
+                    bot_answer = "Lo siento, no pude generar una respuesta basada en la información disponible."
+                    logger.warning("Empty response from LLM, using fallback message")
+                
                 new_conversation.append(create_bot_message(bot_answer, show_process=True))
                 
-                rag_steps_data = result.get("rag_steps", {})
-                rag_panel_content = create_complete_process_view(rag_steps_data)
+                # DATOS PARA EL PANEL RAG - FORMATO CORRECTO
+                rag_panel_data = {
+                    "success": True,
+                    "steps": result.get("steps", {}),
+                    "final_answer": bot_answer,
+                    "llm_method": llm_method
+                }
+                
+                rag_panel_content = create_complete_process_view(rag_panel_data)
                 status_message = "✅ Pregunta respondida por el LLM"
-                rag_data_to_store = rag_steps_data
+                rag_data_to_store = result.get("steps", {})
+                
+                logger.info(f"Bot response generated successfully: {len(bot_answer)} chars")
             else:
                 error_msg = result.get("error", "Error desconocido del RAG orchestrator.")
+                logger.error(f"RAG orchestrator failed: {error_msg}")
                 new_conversation.append(create_error_message(error_msg))
-                rag_panel_content = create_initial_state() # O un panel de error específico
+                rag_panel_content = create_initial_state()
                 status_message = f"❌ Error RAG: {error_msg[:50]}"
                 rag_data_to_store = {"error": error_msg}
         
         except Exception as e:
-            logger.error(f"Exception calling RAG orchestrator or processing its result: {e}", exc_info=True)
+            logger.error(f"Exception calling RAG orchestrator: {e}", exc_info=True)
             critical_error_msg = f"Error crítico en el servidor: {str(e)[:100]}"
             new_conversation.append(create_error_message(critical_error_msg))
-            rag_panel_content = create_initial_state() # O un panel de error crítico
+            rag_panel_content = create_initial_state()
             status_message = "❌ Error Crítico en el Servidor"
             rag_data_to_store = {"error": critical_error_msg}
 
@@ -141,7 +158,14 @@ def register_chat_callbacks(app):
     def show_detailed_process(n_clicks, rag_data):
         if not n_clicks or not rag_data:
             raise PreventUpdate
-        detailed_panel = create_complete_process_view(rag_data)
+        
+        # Formato correcto para el panel
+        panel_data = {
+            "success": True,
+            "steps": rag_data,
+            "llm_method": "openai"  # Default
+        }
+        detailed_panel = create_complete_process_view(panel_data)
         return (no_update, detailed_panel)
     
     @app.callback(
@@ -173,11 +197,7 @@ def register_chat_callbacks(app):
                 stats = get_index_stats()
                 total_vectors = stats.get('total_vector_count', 0)
                 
-                if total_vectors == 0:
-                    panel = create_initial_state()
-                else:
-                    panel = create_initial_state()
-                
+                panel = create_initial_state()
                 return (panel, {})
                 
             except Exception as e:

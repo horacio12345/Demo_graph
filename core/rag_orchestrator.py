@@ -1,9 +1,8 @@
 # ./core/rag_orchestrator.py
-# Orquestador que coordina todos los módulos del agente RAG
+# Orquestador que coordina todos los módulos del agente RAG - VERSIÓN CORREGIDA
 
 import logging
 from typing import Dict, Any
-from agent import SemanticSearcher, ContextBuilder, ResponseGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -19,20 +18,26 @@ class RAGOrchestrator:
                  prompts_file: str = "agent/prompts.yaml"):
         """
         Inicializa el orquestador con los módulos especializados.
-        
-        Args:
-            max_chunks: Máximo número de chunks a recuperar
-            max_context_length: Longitud máxima del contexto
-            prompts_file: Archivo de configuración de prompts
         """
         self.max_chunks = max_chunks
         
-        # Inicializar módulos especializados
-        self.searcher = SemanticSearcher()
-        self.context_builder = ContextBuilder(max_context_length=max_context_length)
-        self.response_generator = ResponseGenerator(prompts_file=prompts_file)
-        
-        logger.info("RAG Orchestrator initialized with modular components")
+        # Importar módulos aquí para evitar problemas circulares
+        try:
+            from agent.search import SemanticSearcher
+            from agent.context import ContextBuilder  
+            from agent.response import ResponseGenerator
+            
+            self.searcher = SemanticSearcher()
+            self.context_builder = ContextBuilder(max_context_length=max_context_length)
+            self.response_generator = ResponseGenerator(prompts_file=prompts_file)
+            
+            logger.info("RAG Orchestrator initialized with modular components")
+        except Exception as e:
+            logger.error(f"Error initializing RAG modules: {e}")
+            # Fallback a None, se manejarán en process_question
+            self.searcher = None
+            self.context_builder = None
+            self.response_generator = None
     
     def process_question(self, question: str, llm_method: str = "openai") -> Dict[str, Any]:
         """
@@ -45,7 +50,7 @@ class RAGOrchestrator:
         Returns:
             Diccionario completo con todos los pasos del proceso
         """
-        logger.info(f"Processing question: {question[:50]}...")
+        logger.info(f"Processing question: {question[:30]}...")
         
         # Estructura del resultado
         result = {
@@ -58,24 +63,36 @@ class RAGOrchestrator:
         }
         
         try:
+            # Verificar que los módulos estén inicializados
+            if not all([self.searcher, self.context_builder, self.response_generator]):
+                logger.error("RAG modules not properly initialized")
+                result["error"] = "Módulos RAG no inicializados correctamente"
+                return result
+
             # PASO 1: Búsqueda semántica
             logger.debug("Step 1: Semantic search")
             chunks, search_info = self.searcher.search_query(question, top_k=self.max_chunks)
             result["steps"]["search"] = search_info
             
             if not search_info.get("overall_success", False):
-                result["error"] = "Error en búsqueda semántica"
+                logger.error("Search step failed")
+                result["error"] = f"Error en búsqueda semántica: {search_info.get('search', {}).get('error', 'Unknown')}"
                 return result
             
+            logger.info(f"Found {len(chunks)} similar chunks")
+
             # PASO 2: Construcción de contexto
             logger.debug("Step 2: Context building")
             context, context_info = self.context_builder.build_context(chunks)
             result["steps"]["context"] = context_info
             
             if not context_info.get("success", False):
-                result["error"] = "Error construyendo contexto"
+                logger.error("Context building failed")
+                result["error"] = f"Error construyendo contexto: {context_info.get('error', 'Unknown')}"
                 return result
             
+            logger.info(f"Context built: {len(context)} chars, {context_info.get('chunks_used', 0)} chunks")
+
             # PASO 3: Generación de respuesta
             logger.debug("Step 3: Response generation")
             response, response_info = self.response_generator.generate_response(
@@ -84,9 +101,12 @@ class RAGOrchestrator:
             result["steps"]["response"] = response_info
             
             if not response_info.get("success", False):
-                result["error"] = "Error generando respuesta"
+                logger.error("Response generation failed")
+                result["error"] = f"Error generando respuesta: {response_info.get('error', 'Unknown')}"
                 return result
             
+            logger.info(f"OpenAI response generated: {len(response)} chars")
+
             # PASO 4: Información de fuentes
             logger.debug("Step 4: Source information")
             sources_info = self._extract_sources_info(chunks)
@@ -100,19 +120,13 @@ class RAGOrchestrator:
             return result
             
         except Exception as e:
-            logger.error(f"Error in RAG orchestrator: {e}")
+            logger.error(f"Error in RAG orchestrator: {e}", exc_info=True)
             result["error"] = str(e)
             return result
     
     def _extract_sources_info(self, chunks: list) -> Dict[str, Any]:
         """
         Extrae información educativa sobre las fuentes utilizadas.
-        
-        Args:
-            chunks: Lista de chunks recuperados
-            
-        Returns:
-            Información sobre las fuentes
         """
         try:
             if not chunks:
@@ -155,64 +169,6 @@ class RAGOrchestrator:
                 "error": str(e),
                 "success": False
             }
-    
-    def get_process_summary(self, result: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Genera un resumen educativo del proceso RAG.
-        
-        Args:
-            result: Resultado del proceso completo
-            
-        Returns:
-            Resumen educativo del proceso
-        """
-        try:
-            if not result.get("success", False):
-                return {
-                    "status": "error",
-                    "error": result.get("error", "Unknown error"),
-                    "steps_completed": len([s for s in result.get("steps", {}).values() if s.get("success", False)])
-                }
-            
-            steps = result.get("steps", {})
-            
-            summary = {
-                "status": "success",
-                "question_length": len(result.get("question", "")),
-                "llm_used": result.get("llm_method", "unknown"),
-                "total_chunks_found": steps.get("search", {}).get("search", {}).get("total_found", 0),
-                "chunks_used_in_context": steps.get("context", {}).get("chunks_used", 0),
-                "context_length": steps.get("context", {}).get("total_length", 0),
-                "response_length": len(result.get("final_answer", "")),
-                "unique_sources": steps.get("sources", {}).get("unique_documents", 0),
-                "avg_relevance": steps.get("sources", {}).get("avg_relevance", 0),
-                "process_time": "N/A"  # Se podría añadir timing
-            }
-            
-            return summary
-            
-        except Exception as e:
-            logger.error(f"Error creating process summary: {e}")
-            return {"status": "error", "error": str(e)}
-    
-    def reload_configuration(self, prompts_file: str = "agent/prompts.yaml") -> bool:
-        """
-        Recarga la configuración de prompts.
-        
-        Args:
-            prompts_file: Archivo de prompts a recargar
-            
-        Returns:
-            True si se recargó exitosamente
-        """
-        try:
-            success = self.response_generator.reload_prompts(prompts_file)
-            if success:
-                logger.info("Configuration reloaded successfully")
-            return success
-        except Exception as e:
-            logger.error(f"Error reloading configuration: {e}")
-            return False
 
 # Instancia global del orquestador
 rag_orchestrator = RAGOrchestrator()
