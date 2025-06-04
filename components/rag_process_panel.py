@@ -11,11 +11,15 @@ def rag_process_panel():
     """
     return dbc.Card([
         dbc.CardHeader([
-            html.H5([
+            html.H3([
                 html.I(className="fas fa-cogs me-2"),
                 "Proceso RAG en Tiempo Real"
-            ], className="mb-0 text-light")
-        ], style={'backgroundColor': '#0a0e1a', 'border': 'none'}),
+            ], className="mb-0", style={
+                'color': '#60a5fa',  # Azul claro
+                'fontSize': '1.8rem',  # Más grande
+                'fontWeight': '600'    # Más grueso
+                })
+        ]),
         dbc.CardBody([
             html.Div(
                 id="rag-process-content",
