@@ -15,9 +15,9 @@ def rag_process_panel():
                 html.I(className="fas fa-cogs me-2"),
                 "Proceso RAG en Tiempo Real"
             ], className="mb-0", style={
-                'color': '#60a5fa',  # Azul claro
+                'color': '#ffffff',  # Azul claro
                 'fontSize': '1.8rem',  # Más grande
-                'fontWeight': '600'    # Más grueso
+                'fontWeight': 'normal'    # Más grueso
                 })
         ]),
         dbc.CardBody([
@@ -36,19 +36,19 @@ def create_initial_state():
     return html.Div([
         html.Div([
             html.I(className="fas fa-play-circle fa-3x text-light mb-3"),
-            html.H5("Sistema RAG Preparado", className="text-light"),
+            html.H5("Sistema RAG Detallado", className="text-light"),
             html.P([
-                "Haz una pregunta para ver el proceso de Retrieval-Augmented Generation paso a paso."
-            ], className="text-light text-center", style={'opacity': '0.8'})
+                "Muestra del proceso de Retrieval-Augmented Generation paso a paso."
+            ], className="text-center", style={'opacity': '1.0', 'color': '#9fc3ee'})
         ], className="text-center py-3"),
         
         # Explicación de los pasos
         html.Div([
             html.H6("🔍 Pasos del Proceso RAG:", className="text-light mb-3"),
-            create_step_card("1", "Vectorización", "Tu pregunta se convierte en números", "info", inactive=True),
-            create_step_card("2", "Búsqueda", "Se buscan fragmentos similares", "info", inactive=True),  
-            create_step_card("3", "Contexto", "Se construye el contexto relevante", "info", inactive=True),
-            create_step_card("4", "Generación", "El LLM crea la respuesta final", "info", inactive=True)
+            create_step_card("1", "Vectorización", "Tu pregunta se convierte en números", "info", inactive=False),
+            create_step_card("2", "Búsqueda", "Se buscan fragmentos similares", "info", inactive=False),  
+            create_step_card("3", "Contexto", "Se construye el contexto relevante", "info", inactive=False),
+            create_step_card("4", "Generación", "El LLM crea la respuesta final", "info", inactive=False)
         ], className="mt-4")
     ], className="text-light")
 
@@ -61,9 +61,15 @@ def create_step_card(number: str, title: str, description: str, color: str = "in
     return dbc.Card([
         dbc.CardBody([
             html.Div([
-                dbc.Badge(number, color=color, className="me-2", pill=True, style={'fontSize': '0.9em'}),
-                html.Strong(title, className="me-2 text-light"),
-                html.Small(description, className="text-light", style={'opacity': '0.8'})
+                dbc.Badge(number, color="light", className="me-2", pill=True, style={
+                    'fontSize': '1.5em',
+                    'color': '#2f6bf5',
+                    'backgroundColor': 'white',
+                    'border': '3px solid #2f6bf5',
+                    'fontWeight': 'bold'
+                }),
+                html.Strong(title, className="me-2", style={'color': '#7da2f7'}),
+                html.Small(description, className="text-light", style={'opacity': '1.0'})
             ])
         ], className="py-2")
     ], className="mb-2", outline=True, color=color, 

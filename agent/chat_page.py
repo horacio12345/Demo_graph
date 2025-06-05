@@ -8,8 +8,10 @@ from components.llm_selector import llm_selector # Importar si lo usas directame
 def layout():
     """
     Define el layout para la página de chat RAG educativo.
+    NOTA: Los stores principales se definen en app.py para compartir entre pestañas.
     """
-    return dbc.Container([
+    return dbc.Container([       
+        dcc.Store(id='rag-process-data', storage_type='memory', data={}),  
 
         dbc.Row([
             dbc.Col(
@@ -32,14 +34,7 @@ def layout():
             )
         ],
         className="mt-4",  # Añadido margen superior aquí
-        # className="g-0" # Descomenta si quieres que las columnas se peguen sin espacio
         style={"height": "calc(100vh - 100px)"} # Altura total de la fila de contenido
-        ),
-        # Importante: Incluir el dcc.Store si los callbacks de chat lo necesitan aquí
-        # Si 'rag-process-data' es usado por callbacks que solo se activan en esta página,
-        # es buena práctica incluirlo en el layout de esta página.
-        # Si ya está en el layout principal y es global, no es necesario duplicarlo.
-        # Por la estructura de tus callbacks, parece que es mejor que esté disponible cuando esta página cargue.
-        dcc.Store(id='rag-process-data')
+        )
 
     ], fluid=True, style={"height": "100vh", "paddingTop": "20px", "background": "#f1f5f9"})

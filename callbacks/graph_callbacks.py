@@ -1,5 +1,5 @@
 # ./callbacks/graph_callbacks.py
-# Callbacks corregidos - datos persistentes entre callbacks
+# Callbacks corregidos - datos persistentes entre callbacks CON CACHE VISUAL
 
 from dash import Input, Output, State, no_update, callback_context
 from core import graph_builder
@@ -12,81 +12,140 @@ import os
 GRAPH_DATA = {
     'entities': [],
     'relations': [],
-    'last_update': None
+    'elements': [],  # ⭐ NUEVO: Cache de elementos de Cytoscape
+    'legend': None,  # ⭐ NUEVO: Cache de leyenda
+    'last_update': None,
+    'has_data': False  # ⭐ NUEVO: Flag para saber si hay datos
 }
-
-# REEMPLAZAR en graph_callbacks.py - callback update_graph_and_panel
 
 def register_graph_callbacks(app):
     
     @app.callback(
         [Output("knowledge-graph", "elements"),
          Output("embedding-panel", "children"),
-         Output("dynamic-legend", "children")],  # ← NUEVO OUTPUT
-        [Input("progress-info", "children")],
+         Output("dynamic-legend", "children"),
+         Output("graph-cache", "data")],  # ⭐ NUEVO: Store para cache
+        [Input("progress-info", "children"),
+         Input("url", "pathname")],  # ⭐ NUEVO: Escuchar cambios de URL
+        [State("graph-cache", "data")],
         prevent_initial_call=True
     )
-    def update_graph_and_panel(progress_message):
+    def update_graph_and_panel_with_cache(progress_message, pathname, cached_data):
         """
-        Actualiza el grafo Y la leyenda dinámica cuando se completa el procesamiento.
+        Actualiza el grafo con persistencia visual entre pestañas.
         """
         global GRAPH_DATA
         
-        print(f"🔄 Callback activado con mensaje: {progress_message}")
+        ctx = callback_context
+        triggered_id = ctx.triggered[0]['prop_id'].split('.')[0] if ctx.triggered else None
         
-        # Verificar si hay mensaje de éxito con entidades/relaciones
-        if not progress_message or "entidades" not in str(progress_message):
-            print("⚠️ No hay datos de entidades en el mensaje")
-            return [], create_empty_panel(), create_empty_legend()  # ← LEYENDA VACÍA
+        print(f"🔄 Graph callback triggered by: {triggered_id}")
+        print(f"📍 Current pathname: {pathname}")
+        print(f"📊 Has cached data: {bool(cached_data and cached_data.get('has_data'))}")
         
-        try:
-            # Intentar obtener datos de Flask g primero
-            from flask import g
-            entities = getattr(g, "entities", [])
-            relations = getattr(g, "relations", [])
-            
-            print(f"📊 Datos de Flask g: {len(entities)} entidades, {len(relations)} relaciones")
-            
-            # Si no hay datos en g, usar datos globales
-            if not entities and not relations:
-                entities = GRAPH_DATA['entities']
-                relations = GRAPH_DATA['relations']
-                print(f"📊 Usando datos globales: {len(entities)} entidades, {len(relations)} relaciones")
+        # Si el trigger es un cambio de URL y tenemos datos en cache, restaurar
+        if triggered_id == "url" and pathname in ["/", "/chat"]:
+            if GRAPH_DATA.get('has_data') and GRAPH_DATA.get('elements'):
+                print("🔄 Restaurando grafo desde cache global...")
+                return (
+                    GRAPH_DATA['elements'],
+                    create_graph_info_panel(GRAPH_DATA['entities'], GRAPH_DATA['relations']),
+                    GRAPH_DATA.get('legend', create_empty_legend()),
+                    {
+                        'elements': GRAPH_DATA['elements'],
+                        'legend': GRAPH_DATA.get('legend'),
+                        'has_data': True,
+                        'last_update': GRAPH_DATA.get('last_update')
+                    }
+                )
+            elif cached_data and cached_data.get('has_data'):
+                print("🔄 Restaurando grafo desde cache de Store...")
+                return (
+                    cached_data.get('elements', []),
+                    create_cached_info_panel(),
+                    cached_data.get('legend', create_empty_legend()),
+                    cached_data
+                )
             else:
-                # Actualizar datos globales
-                GRAPH_DATA['entities'] = entities
-                GRAPH_DATA['relations'] = relations
-                print("✅ Datos globales actualizados")
+                print("📭 No hay datos de grafo para restaurar")
+                return [], create_empty_panel(), create_empty_legend(), {}
+        
+        # Si el trigger es progreso, procesamiento normal
+        if triggered_id == "progress-info":
+            print(f"🔄 Procesando nuevo mensaje de progreso: {progress_message}")
             
-            if not entities and not relations:
-                print("❌ No hay datos para el grafo")
-                return [], create_no_data_panel(), create_empty_legend()  # ← LEYENDA VACÍA
+            # Verificar si hay mensaje de éxito con entidades/relaciones
+            if not progress_message or "entidades" not in str(progress_message):
+                print("⚠️ No hay datos de entidades en el mensaje")
+                return no_update, no_update, no_update, no_update
             
-            # Construir elementos para Cytoscape
-            elements = build_cytoscape_elements(entities, relations)
-            print(f"✅ Elementos creados: {len(elements)}")
-            
-            # Crear panel de información
-            info_panel = create_graph_info_panel(entities, relations)
-            
-            # ⭐ CREAR LEYENDA DINÁMICA ⭐
-            # Contar tipos de entidades (ya se hace en create_graph_info_panel, reutilizar)
-            entity_counts = {}
-            for entity in entities:
-                entity_type = entity.get('type', 'Unknown')
-                entity_counts[entity_type] = entity_counts.get(entity_type, 0) + 1
-            
-            # Generar leyenda dinámica
-            dynamic_legend = create_dynamic_legend(entity_counts)
-            print(f"🏷️ Leyenda creada con {len(entity_counts)} tipos diferentes")
-            
-            return elements, info_panel, dynamic_legend  # ← RETORNAR LEYENDA
-            
-        except Exception as e:
-            print(f"❌ Error en callback del grafo: {e}")
-            import traceback
-            traceback.print_exc()
-            return [], create_error_panel(str(e)), create_empty_legend()  # ← LEYENDA VACÍA EN ERROR
+            try:
+                # Intentar obtener datos de Flask g primero
+                from flask import g
+                entities = getattr(g, "entities", [])
+                relations = getattr(g, "relations", [])
+                
+                print(f"📊 Datos de Flask g: {len(entities)} entidades, {len(relations)} relaciones")
+                
+                # Si no hay datos en g, usar datos globales
+                if not entities and not relations:
+                    entities = GRAPH_DATA['entities']
+                    relations = GRAPH_DATA['relations']
+                    print(f"📊 Usando datos globales: {len(entities)} entidades, {len(relations)} relaciones")
+                else:
+                    # Actualizar datos globales
+                    GRAPH_DATA['entities'] = entities
+                    GRAPH_DATA['relations'] = relations
+                    print("✅ Datos globales actualizados")
+                
+                if not entities and not relations:
+                    print("❌ No hay datos para el grafo")
+                    return [], create_no_data_panel(), create_empty_legend(), {}
+                
+                # Construir elementos para Cytoscape
+                elements = build_cytoscape_elements(entities, relations)
+                print(f"✅ Elementos creados: {len(elements)}")
+                
+                # Crear panel de información
+                info_panel = create_graph_info_panel(entities, relations)
+                
+                # Crear leyenda dinámica
+                entity_counts = {}
+                for entity in entities:
+                    entity_type = entity.get('type', 'Unknown')
+                    entity_counts[entity_type] = entity_counts.get(entity_type, 0) + 1
+                
+                dynamic_legend = create_dynamic_legend(entity_counts)
+                print(f"🏷️ Leyenda creada con {len(entity_counts)} tipos diferentes")
+                
+                # ⭐ ACTUALIZAR CACHE GLOBAL ⭐
+                GRAPH_DATA['elements'] = elements
+                GRAPH_DATA['legend'] = dynamic_legend
+                GRAPH_DATA['has_data'] = True
+                GRAPH_DATA['last_update'] = str(progress_message)[:50]
+                
+                # ⭐ CREAR CACHE PARA STORE ⭐
+                cache_data = {
+                    'elements': elements,
+                    'legend': dynamic_legend,
+                    'has_data': True,
+                    'last_update': GRAPH_DATA['last_update'],
+                    'entities_count': len(entities),
+                    'relations_count': len(relations)
+                }
+                
+                print("💾 Cache actualizado exitosamente")
+                
+                return elements, info_panel, dynamic_legend, cache_data
+                
+            except Exception as e:
+                print(f"❌ Error en callback del grafo: {e}")
+                import traceback
+                traceback.print_exc()
+                return [], create_error_panel(str(e)), create_empty_legend(), {}
+        
+        # Caso por defecto: no hacer nada
+        return no_update, no_update, no_update, no_update
     
     # El resto de callbacks sin cambios...
     @app.callback(
@@ -109,9 +168,37 @@ def register_graph_callbacks(app):
             print(f"❌ Error mostrando detalles: {e}")
             return create_error_panel(str(e))
 
+# ⭐ NUEVA FUNCIÓN: Panel de información desde cache ⭐
+def create_cached_info_panel():
+    """
+    Panel de información cuando se restaura desde cache.
+    """
+    from dash import html
+    import dash_bootstrap_components as dbc
+    
+    global GRAPH_DATA
+    entities = GRAPH_DATA.get('entities', [])
+    relations = GRAPH_DATA.get('relations', [])
+    
+    if entities or relations:
+        return create_graph_info_panel(entities, relations)
+    else:
+        return dbc.Alert([
+            html.H6("📊 Grafo Restaurado", className="alert-heading"),
+            html.P("El grafo se ha restaurado desde la memoria. Los datos originales están disponibles."),
+            html.Small(f"Última actualización: {GRAPH_DATA.get('last_update', 'Desconocida')}", 
+                      className="text-muted")
+        ], color="info")
 
-# REEMPLAZAR en graph_callbacks.py - función build_cytoscape_elements
+# ⭐ FUNCIÓN MEJORADA: Verificar si hay datos disponibles ⭐
+def has_graph_data():
+    """
+    Verifica si hay datos de grafo disponibles.
+    """
+    global GRAPH_DATA
+    return GRAPH_DATA.get('has_data', False) and bool(GRAPH_DATA.get('elements'))
 
+# Las demás funciones se mantienen igual...
 def build_cytoscape_elements(entities, relations):
     """
     Construye elementos de Cytoscape desde entidades y relaciones.
@@ -215,7 +302,7 @@ def create_graph_info_panel(entities, relations):
         dbc.CardBody([
             dbc.Row([
                 dbc.Col([
-                    html.H4(len(entities), className="text-primary"),
+                    html.H4(len(entities), className="mb-0 text-light"),
                     html.P("Entidades", className="mb-0")
                 ], width=4),
                 dbc.Col([
@@ -244,8 +331,6 @@ def create_graph_info_panel(entities, relations):
             ])
         ])
     ], className="mt-3")
-
-# REEMPLAZAR en graph_callbacks.py - función create_node_detail_panel
 
 def create_node_detail_panel(node_data):
     """
@@ -310,7 +395,6 @@ def create_node_detail_panel(node_data):
         ])
     ], className="mt-3")
 
-
 def get_node_embedding_info(node_label, node_id, num_values=15):
     """
     Busca y muestra información del embedding relacionado con el nodo.
@@ -357,7 +441,7 @@ def get_node_embedding_info(node_label, node_id, num_values=15):
                 
                 row_elements.append(
                     html.Span(
-                        f"{value}",
+                        f"{value:.20f}",
                         style={
                             'backgroundColor': color,
                             'color': 'white',
@@ -505,8 +589,6 @@ def create_error_panel(error_msg):
         html.P(f"Error: {error_msg}")
     ], color="danger")
 
-# Agregar esta función a graph_callbacks.py - DESPUÉS de las importaciones
-
 def create_dynamic_legend(entity_counts):
     """
     Crea leyenda dinámica basada en los tipos de entidades presentes.
@@ -637,7 +719,6 @@ def create_dynamic_legend(entity_counts):
         'boxShadow': '0 4px 12px rgba(0, 0, 0, 0.3)'
     })
 
-
 def create_empty_legend():
     """
     Leyenda vacía cuando no hay datos.
@@ -645,3 +726,182 @@ def create_empty_legend():
     from dash import html
     return html.Div()  # Simplemente vacío
 
+# ⭐ FUNCIONES ADICIONALES PARA GESTIÓN DE CACHE ⭐
+
+def clear_graph_cache():
+    """
+    Limpia el cache del grafo (útil para debugging o reset manual).
+    """
+    global GRAPH_DATA
+    GRAPH_DATA = {
+        'entities': [],
+        'relations': [],
+        'elements': [],
+        'legend': None,
+        'last_update': None,
+        'has_data': False
+    }
+    print("🧹 Cache del grafo limpiado")
+
+def get_cache_info():
+    """
+    Obtiene información del estado actual del cache.
+    """
+    global GRAPH_DATA
+    return {
+        'has_data': GRAPH_DATA.get('has_data', False),
+        'entities_count': len(GRAPH_DATA.get('entities', [])),
+        'relations_count': len(GRAPH_DATA.get('relations', [])),
+        'elements_count': len(GRAPH_DATA.get('elements', [])),
+        'last_update': GRAPH_DATA.get('last_update', 'Never')
+    }
+
+def restore_graph_from_backup(entities, relations):
+    """
+    Restaura el grafo desde datos de backup externos.
+    Útil si necesitas recuperar desde otra fuente.
+    """
+    global GRAPH_DATA
+    
+    try:
+        # Construir elementos
+        elements = build_cytoscape_elements(entities, relations)
+        
+        # Crear leyenda
+        entity_counts = {}
+        for entity in entities:
+            entity_type = entity.get('type', 'Unknown')
+            entity_counts[entity_type] = entity_counts.get(entity_type, 0) + 1
+        
+        legend = create_dynamic_legend(entity_counts)
+        
+        # Actualizar cache
+        GRAPH_DATA.update({
+            'entities': entities,
+            'relations': relations,
+            'elements': elements,
+            'legend': legend,
+            'has_data': True,
+            'last_update': 'Restored from backup'
+        })
+        
+        print(f"🔄 Grafo restaurado: {len(entities)} entidades, {len(relations)} relaciones")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error restaurando grafo: {e}")
+        return False
+
+# ⭐ CALLBACK ADICIONAL PARA GESTIÓN MANUAL DEL CACHE ⭐
+def register_additional_graph_callbacks(app):
+    """
+    Callbacks adicionales para gestión avanzada del cache.
+    Llamar esto después de register_graph_callbacks() si necesitas funcionalidad extra.
+    """
+    
+    @app.callback(
+        Output("graph-cache", "data", allow_duplicate=True),
+        Input("clear-graph-cache-btn", "n_clicks"),
+        prevent_initial_call=True
+    )
+    def clear_cache_callback(n_clicks):
+        """
+        Callback para limpiar el cache manualmente.
+        Requiere un botón con id="clear-graph-cache-btn" en el layout.
+        """
+        if n_clicks:
+            clear_graph_cache()
+            return {}
+        return no_update
+    
+    @app.callback(
+        Output("cache-info-display", "children"),
+        Input("graph-cache", "data"),
+        prevent_initial_call=True
+    )
+    def update_cache_info_display(cache_data):
+        """
+        Callback para mostrar información del cache.
+        Requiere un div con id="cache-info-display" en el layout.
+        """
+        cache_info = get_cache_info()
+        
+        if cache_info['has_data']:
+            return html.Div([
+                html.Small([
+                    f"📊 Cache: {cache_info['entities_count']} entidades, ",
+                    f"{cache_info['relations_count']} relaciones | ",
+                    f"Última actualización: {cache_info['last_update']}"
+                ], style={'color': '#6b7280', 'fontSize': '11px'})
+            ])
+        else:
+            return html.Div([
+                html.Small("📭 Cache vacío", style={'color': '#9ca3af', 'fontSize': '11px'})
+            ])
+
+# ⭐ FUNCIONES DE UTILIDAD PARA DEBUGGING ⭐
+def debug_graph_state():
+    """
+    Función de debugging para inspeccionar el estado actual.
+    """
+    global GRAPH_DATA
+    print("\n🔍 DEBUG - Estado actual del grafo:")
+    print(f"  Has data: {GRAPH_DATA.get('has_data', False)}")
+    print(f"  Entities: {len(GRAPH_DATA.get('entities', []))}")
+    print(f"  Relations: {len(GRAPH_DATA.get('relations', []))}")
+    print(f"  Elements: {len(GRAPH_DATA.get('elements', []))}")
+    print(f"  Last update: {GRAPH_DATA.get('last_update', 'Never')}")
+    
+    if GRAPH_DATA.get('entities'):
+        print(f"  Entity types: {set(e.get('type') for e in GRAPH_DATA['entities'])}")
+    
+    print("🔍 END DEBUG\n")
+    
+def validate_graph_data():
+    """
+    Valida la consistencia de los datos del grafo.
+    """
+    global GRAPH_DATA
+    
+    entities = GRAPH_DATA.get('entities', [])
+    relations = GRAPH_DATA.get('relations', [])
+    elements = GRAPH_DATA.get('elements', [])
+    
+    issues = []
+    
+    # Verificar entidades
+    entity_ids = set()
+    for i, entity in enumerate(entities):
+        if not entity.get('id'):
+            issues.append(f"Entidad {i} sin ID")
+        else:
+            entity_ids.add(entity['id'])
+    
+    # Verificar relaciones
+    for i, relation in enumerate(relations):
+        source_id = relation.get('source_id')
+        target_id = relation.get('target_id')
+        
+        if not source_id or not target_id:
+            issues.append(f"Relación {i} con IDs faltantes")
+        elif source_id not in entity_ids or target_id not in entity_ids:
+            issues.append(f"Relación {i} referencia entidades inexistentes")
+    
+    # Verificar elementos de Cytoscape
+    node_elements = [e for e in elements if 'source' not in e.get('data', {})]
+    edge_elements = [e for e in elements if 'source' in e.get('data', {})]
+    
+    if len(node_elements) != len(entities):
+        issues.append(f"Mismatch en nodos: {len(node_elements)} elements vs {len(entities)} entities")
+    
+    if len(edge_elements) != len(relations):
+        issues.append(f"Mismatch en aristas: {len(edge_elements)} elements vs {len(relations)} relations")
+    
+    if issues:
+        print("⚠️ Problemas encontrados en los datos del grafo:")
+        for issue in issues:
+            print(f"  - {issue}")
+        return False
+    else:
+        print("✅ Datos del grafo válidos")
+        return True

@@ -1,5 +1,5 @@
 # ./components/chat_interface.py
-# Interfaz de chat para el agente RAG conversacional - VERSIÓN COMPLETA
+# Interfaz de chat para el agente RAG conversacional - VERIFICADO con IDs correctos
 
 from dash import dcc, html, Input, Output, State
 import dash_bootstrap_components as dbc
@@ -7,6 +7,7 @@ import dash_bootstrap_components as dbc
 def chat_interface():
     """
     Componente de interfaz de chat para hacer preguntas al agente RAG.
+    Todos los IDs están verificados para coincidir con los callbacks.
     """
     return dbc.Container([
         # Header del chat
@@ -16,7 +17,7 @@ def chat_interface():
                     "🤖 Agente RAG Conversacional",
                     html.Br(),
                     html.Small("Pregunta sobre los documentos procesados", 
-                              className="ms-2", style={'color': '#0927ac', 'fontSize': '1.3rem'})   
+                              className="ms-2", style={'color': '#1d5ff9', 'fontSize': '1.3rem'})   
                 ], className="mb-3 chat-rag-title", style={'fontSize': '2rem'}),
             ])
         ]),
@@ -29,14 +30,14 @@ def chat_interface():
                         html.H5("💬 Haz tu pregunta", className="card-title mb-3 text-light"),
                         dbc.InputGroup([
                             dbc.Input(
-                                id="chat-input",
+                                id="chat-input",  # ⭐ ID VERIFICADO ⭐
                                 type="text",
                                 placeholder="Ejemplo: ¿Qué información hay sobre Albert Einstein?",
                                 style={"fontSize": "14px", "backgroundColor": "#1a2035", "color": "#ffffff", "border": "1px solid #334155"}
                             ),
                             dbc.Button(
                                 "Enviar",
-                                id="chat-send-btn",
+                                id="chat-send-btn",  # ⭐ ID VERIFICADO ⭐
                                 n_clicks=0,
                                 color="primary",
                                 className="ms-2"
@@ -48,7 +49,7 @@ def chat_interface():
                             dbc.Col([
                                 html.Label("Modelo LLM:", className="form-label text-light"),
                                 dcc.Dropdown(
-                                    id="chat-llm-selector",
+                                    id="chat-llm-selector",  # ⭐ ID VERIFICADO ⭐
                                     options=[
                                         {"label": "OpenAI GPT-4o", "value": "openai"},
                                         {"label": "Claude Sonnet 4", "value": "claude"}
@@ -61,7 +62,7 @@ def chat_interface():
                             dbc.Col([
                                 html.Label("Estado:", className="form-label text-light"),
                                 html.Div(
-                                    id="chat-status",
+                                    id="chat-status",  # ⭐ ID VERIFICADO ⭐
                                     children="💤 Esperando pregunta...",
                                     className="form-control-plaintext text-light"
                                 )
@@ -76,7 +77,7 @@ def chat_interface():
         dbc.Row([
             dbc.Col([
                 html.Div(
-                    id="chat-conversation",
+                    id="chat-conversation",  # ⭐ ID VERIFICADO ⭐
                     children=[
                         html.Div([
                             html.P("Aquí verás la respuesta a tu pregunta...",
@@ -157,7 +158,7 @@ def create_bot_message(answer: str, show_process: bool = False) -> dbc.Card:
             html.Div([
                 dbc.Button(
                     [html.I(className="fas fa-cogs me-2"), "Ver Proceso RAG Detallado"],
-                    id="show-process-btn",
+                    id="show-process-btn",  # ⭐ ID VERIFICADO ⭐
                     color="outline-info",
                     size="sm",
                     className="mt-2",

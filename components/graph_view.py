@@ -1,12 +1,13 @@
 # ./components/graph_view.py
-# Componente con colores CORREGIDOS para los nodos
+# Componente con colores CORREGIDOS para los nodos + CACHE STORE
 
 import dash_cytoscape as cyto
-from dash import html
+from dash import html, dcc
 
 def graph_view(elements=[], layout_name="cose", style=None, stylesheet=None):
     """
     Componente simplificado del grafo que garantiza la visualización correcta.
+    Incluye Store para persistencia visual entre pestañas.
     """
     
     # Estilo del contenedor - FONDO NEGRO GARANTIZADO
@@ -276,6 +277,13 @@ def graph_view(elements=[], layout_name="cose", style=None, stylesheet=None):
     }
 
     return html.Div([
+        # ⭐ STORE PARA CACHE DEL GRAFO ⭐
+        dcc.Store(
+            id="graph-cache",
+            storage_type="session",  # Persiste durante la sesión del navegador
+            data={}
+        ),
+        
         # PLACEHOLDER PARA LEYENDA DINÁMICA - se llenará desde callback
         html.Div(
             id="dynamic-legend",

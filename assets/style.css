@@ -135,10 +135,6 @@ body {
     color: var(--text-primary) !important;
 }
 
-.card-body {
-    color: var(--text-secondary) !important;
-}
-
 /* Botones mejorados */
 .btn {
     border-radius: 8px !important;
@@ -606,10 +602,6 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* Aplicar animaciones */
-.card {
-    animation: slideInUp 0.6s ease-out;
-}
-
 .btn {
     animation: fadeIn 0.8s ease-out;
 }
@@ -982,7 +974,7 @@ div[class*="Select"] * {
     box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; 
     backdrop-filter: none !important;       
     margin-bottom: 1rem !important;         
-    border-radius: 12px !important;
+    border-radius: 20px !important;
 }
 
 #chat-conversation .card .card-body {

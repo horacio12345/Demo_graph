@@ -39,7 +39,7 @@ else:
         format='%(levelname)s: %(message)s'
     )
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.ZEPHYR], suppress_callback_exceptions=True)
+app = Dash(__name__, external_stylesheets=[dbc.themes.ZEPHYR], suppress_callback_exceptions=True)  # ⭐ AÑADIR suppress_callback_exceptions=True ⭐
 
 # ⭐ LÍNEA CRÍTICA PARA DEPLOYMENT ⭐
 server = app.server
@@ -56,13 +56,51 @@ server.config['PERMANENT_SESSION_LIFETIME'] = 1800
 # ⭐ CONFIGURAR RUTAS DE AUTENTICACIÓN ⭐
 setup_auth_routes(app)
 
+# ⭐ LAYOUT DE VALIDACIÓN PARA CALLBACKS DINÁMICOS ⭐
+# Esto declara todos los IDs que podrían existir en cualquier página
+validation_layout = html.Div([
+    # Componentes principales
+    dcc.Location(id='url', refresh=False),
+    html.Div(id='page-content'),
+    
+    # Stores globales
+    dcc.Store(id='graph-cache', storage_type='session', data={}),
+    dcc.Store(id='rag-process-data', storage_type='memory', data={}),
+    
+    # Componentes de la página principal (grafo)
+    html.Div(id='upload-data'),
+    html.Div(id='input-url'),
+    html.Button(id='process-url-btn', n_clicks=0),
+    html.Div(id='ocr-method'),
+    html.Div(id='llm-method'),
+    html.Div(id='loading-progress'),
+    html.Div(id='progress-info'),
+    html.Button(id='btn-reset-pinecone', n_clicks=0),
+    html.Div(id='dynamic-legend'),
+    html.Div(id='knowledge-graph'),
+    html.Div(id='embedding-panel'),
+    
+    # Componentes de la página de chat
+    html.Div(id='chat-conversation'),
+    html.Div(id='chat-status'),
+    html.Div(id='rag-process-content'),
+    dcc.Input(id='chat-input'),
+    html.Button(id='chat-send-btn', n_clicks=0),
+    html.Div(id='chat-llm-selector'),
+    html.Button(id='show-process-btn', n_clicks=0),
+])
 
-# ---- Contenido de la página principal (Grafo) - ANTES get_main_layout ----
+# Asignar layout de validación
+app.validation_layout = validation_layout
+
+
 def get_main_layout_content():
     """Layout del contenido de la página principal (procesamiento y grafo)."""
     print("DEBUG: Llamando a get_main_layout_content()")
-    # El header con info de usuario y logout ahora está en la navbar
     return dbc.Container([
+        dcc.Store(id='graph-cache', storage_type='session', data={}),
+        dcc.Store(id='rag-process-data', storage_type='memory', data={}),
+        
         dbc.Row([
             dbc.Col([
                 html.H2("RAG Demo - Knowledge Graph Extraction", style={'color': 'black'}),
@@ -78,12 +116,11 @@ def get_main_layout_content():
             dbc.Col([
                 graph_view(),
                 html.Div(id="embedding-panel", style={"marginTop": "32px"})
-            ], width=9, style={"padding": "24px"})
+            ], width=9, style={"padding": "24px"}),
+            html.Div(id="rag-process-content", style={"display": "none"})  
         ])
     ], fluid=True, style={"background": "#f1f5f9", "minHeight": "calc(100vh - 56px)"}) # Ajustar altura si hay navbar
 
-
-# ---- NUEVA FUNCIÓN: Layout base con Navegación ----
 def get_base_layout_with_navbar():
     """Layout base que incluye la barra de navegación y el contenedor de página."""
     print("DEBUG: Llamando a get_base_layout_with_navbar()")
