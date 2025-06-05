@@ -38,11 +38,7 @@ def register_graph_callbacks(app):
         
         ctx = callback_context
         triggered_id = ctx.triggered[0]['prop_id'].split('.')[0] if ctx.triggered else None
-        
-        print(f"🔄 Graph callback triggered by: {triggered_id}")
-        print(f"📍 Current pathname: {pathname}")
-        print(f"📊 Has cached data: {bool(cached_data and cached_data.get('has_data'))}")
-        
+
         # Si el trigger es un cambio de URL y tenemos datos en cache, restaurar
         if triggered_id == "url" and pathname in ["/", "/chat"]:
             if GRAPH_DATA.get('has_data') and GRAPH_DATA.get('elements'):
@@ -80,31 +76,23 @@ def register_graph_callbacks(app):
                 return no_update, no_update, no_update, no_update
             
             try:
-                # Intentar obtener datos de Flask g primero
-                from flask import g
-                entities = getattr(g, "entities", [])
-                relations = getattr(g, "relations", [])
-                
-                print(f"📊 Datos de Flask g: {len(entities)} entidades, {len(relations)} relaciones")
-                
-                # Si no hay datos en g, usar datos globales
-                if not entities and not relations:
-                    entities = GRAPH_DATA['entities']
-                    relations = GRAPH_DATA['relations']
-                    print(f"📊 Usando datos globales: {len(entities)} entidades, {len(relations)} relaciones")
-                else:
-                    # Actualizar datos globales
-                    GRAPH_DATA['entities'] = entities
-                    GRAPH_DATA['relations'] = relations
-                    print("✅ Datos globales actualizados")
-                
+                # Obtener datos del módulo OCR directamente
+                from callbacks.ocr_callbacks import GRAPH_DATA as OCR_GRAPH_DATA
+                entities = OCR_GRAPH_DATA.get('entities', [])
+                relations = OCR_GRAPH_DATA.get('relations', [])
+
+                print(f"📊 Datos encontrados: {len(entities)} entidades, {len(relations)} relaciones")
+
                 if not entities and not relations:
                     print("❌ No hay datos para el grafo")
                     return [], create_no_data_panel(), create_empty_legend(), {}
+
+                # Actualizar datos globales
+                GRAPH_DATA['entities'] = entities
+                GRAPH_DATA['relations'] = relations
                 
                 # Construir elementos para Cytoscape
                 elements = build_cytoscape_elements(entities, relations)
-                print(f"✅ Elementos creados: {len(elements)}")
                 
                 # Crear panel de información
                 info_panel = create_graph_info_panel(entities, relations)
@@ -116,7 +104,6 @@ def register_graph_callbacks(app):
                     entity_counts[entity_type] = entity_counts.get(entity_type, 0) + 1
                 
                 dynamic_legend = create_dynamic_legend(entity_counts)
-                print(f"🏷️ Leyenda creada con {len(entity_counts)} tipos diferentes")
                 
                 # ⭐ ACTUALIZAR CACHE GLOBAL ⭐
                 GRAPH_DATA['elements'] = elements
@@ -297,7 +284,7 @@ def create_graph_info_panel(entities, relations):
     
     return dbc.Card([
         dbc.CardHeader([
-            html.H5("📊 Estadísticas del Grafo", className="mb-0")
+            html.H3("📊 Estadísticas del Grafo", className="mb-0")
         ]),
         dbc.CardBody([
             dbc.Row([

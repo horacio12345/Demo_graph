@@ -1050,3 +1050,7 @@ div[class*="Select"] * {
     border-color: #25cff2 !important;
     color: #000 !important;
 }
+
+#embedding-panel * {
+    color: var(--text-primary) !important;
+}

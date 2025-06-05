@@ -280,7 +280,7 @@ def graph_view(elements=[], layout_name="cose", style=None, stylesheet=None):
         # ⭐ STORE PARA CACHE DEL GRAFO ⭐
         dcc.Store(
             id="graph-cache",
-            storage_type="session",  # Persiste durante la sesión del navegador
+            storage_type="local",
             data={}
         ),
         
