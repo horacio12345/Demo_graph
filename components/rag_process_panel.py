@@ -418,7 +418,7 @@ def create_similarity_scores(scores: List[float]):
         score_items.append(
             dbc.Progress(
                 value=score * 100,
-                label=f"{score:.3f}",
+                label=f"{score:.15f}",
                 color="success" if score > 0.8 else "warning" if score > 0.6 else "info",
                 className="mb-2",
                 style={"height": "25px"}

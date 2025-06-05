@@ -10,8 +10,12 @@ import tempfile
 from core import ocr, utils, embeddings
 from openai import OpenAI
 
-# Importar la variable global del grafo
-from callbacks.graph_callbacks import GRAPH_DATA
+# Variable local para guardar datos del grafo
+GRAPH_DATA = {
+    'entities': [],
+    'relations': [],
+    'last_update': None
+}
 
 def register_ocr_callbacks(app):
 
@@ -122,10 +126,10 @@ def register_ocr_callbacks(app):
                     print(f"❌ Error completo extrayendo entidades del chunk {i}: {str(e)}")
                     continue
             
-            # ⭐ GUARDAR EN VARIABLE GLOBAL Y FLASK G ⭐
+            # ⭐ GUARDAR EN VARIABLE LOCAL ⭐
             print(f"💾 Guardando datos: {len(all_entities)} entidades, {len(all_relations)} relaciones")
             
-            # Guardar en variable global (persiste entre callbacks)
+            # Guardar en variable local de este módulo
             global GRAPH_DATA
             GRAPH_DATA['entities'] = all_entities
             GRAPH_DATA['relations'] = all_relations
@@ -139,7 +143,7 @@ def register_ocr_callbacks(app):
                 g.chunks = chunks
                 print("✅ Datos guardados en Flask g")
             except:
-                print("⚠️ No se pudo guardar en Flask g, usando solo variable global")
+                print("⚠️ No se pudo guardar en Flask g, usando solo variable local")
             
             # Imprimir muestra de datos para verificar
             print("\n📋 DATOS EXTRAÍDOS:")
@@ -359,7 +363,7 @@ def process_extracted_text(text, source, method):
                 print(f"❌ Error extrayendo entidades del chunk {i}: {e}")
                 continue
         
-        # Guardar datos
+        # Guardar datos en variable local
         global GRAPH_DATA
         GRAPH_DATA['entities'] = all_entities
         GRAPH_DATA['relations'] = all_relations

@@ -12,7 +12,7 @@ from components.ocr_selector import ocr_selector
 from components.llm_selector import llm_selector
 from components.progress_bar import progress_bar
 from components.graph_view import graph_view
-# from components.embedding_view import embedding_view # Comentado si no se usa directamente en layout
+from components.embedding_view import embedding_view # Comentado si no se usa directamente en layout
 
 # Callbacks originales
 from callbacks.ocr_callbacks import register_ocr_callbacks
@@ -75,6 +75,7 @@ validation_layout = html.Div([
     html.Div(id='llm-method'),
     html.Div(id='loading-progress'),
     html.Div(id='progress-info'),
+    html.Button(id='generate-graph-btn', n_clicks=0),
     html.Button(id='btn-reset-pinecone', n_clicks=0),
     html.Div(id='dynamic-legend'),
     html.Div(id='knowledge-graph'),
@@ -103,7 +104,7 @@ def get_main_layout_content():
         
         dbc.Row([
             dbc.Col([
-                html.H2("RAG Demo - Knowledge Graph Extraction", style={'color': 'black'}),
+                #html.H2("RAG Demo - Knowledge Graph Extraction", style={'color': 'black'}),
                 html.Hr(),
                 upload_component(),
                 ocr_selector(),
@@ -203,7 +204,7 @@ register_ocr_callbacks(app)
 register_llm_callbacks(app)
 register_graph_callbacks(app)
 register_embedding_callbacks(app)
-register_chat_callbacks(app) # ⭐ REGISTRAR NUEVOS CALLBACKS DEL CHAT ⭐
+register_chat_callbacks(app)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))

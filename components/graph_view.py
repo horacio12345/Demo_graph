@@ -277,13 +277,7 @@ def graph_view(elements=[], layout_name="cose", style=None, stylesheet=None):
     }
 
     return html.Div([
-        # ⭐ STORE PARA CACHE DEL GRAFO ⭐
-        dcc.Store(
-            id="graph-cache",
-            storage_type="local",
-            data={}
-        ),
-        
+
         # PLACEHOLDER PARA LEYENDA DINÁMICA - se llenará desde callback
         html.Div(
             id="dynamic-legend",

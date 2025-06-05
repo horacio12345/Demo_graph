@@ -66,5 +66,24 @@ def upload_component():
                     'color': 'white'
                 }
             )
+        ]),
+        
+        # Nuevo botón para generar grafo desde BBDD
+        html.Div([
+            html.Button(
+                [html.I(className="fas fa-project-diagram me-2"), "Generar Grafo desde BBDD"],
+                id="generate-graph-btn",
+                n_clicks=0,
+                className="btn btn-outline-info",
+                style={
+                    'width': '100%',
+                    'margin': '16px 0 8px 0',
+                    'padding': '12px',
+                    'fontWeight': '500',
+                    'borderRadius': 'var(--border-radius)',
+                    'cursor': 'pointer',
+                    'transition': 'var(--transition)'
+                }
+            )
         ])
     ], style={'marginBottom': '24px'})

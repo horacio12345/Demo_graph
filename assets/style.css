@@ -1054,3 +1054,8 @@ div[class*="Select"] * {
 #embedding-panel * {
     color: var(--text-primary) !important;
 }
+
+
+.navbar-brand {
+    font-size: 1.6rem !important;
+}

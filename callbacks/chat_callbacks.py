@@ -125,14 +125,6 @@ def register_chat_callbacks(app):
                 ""
             )
 
-    # ⭐ CALLBACK DE ENTER - CON VALIDACIÓN Y MANEJO DE ERRORES ⭐
-    @app.callback(
-        Output("chat-send-btn", "n_clicks", allow_duplicate=True),
-        Input("chat-input", "n_submit"),
-        [State("chat-send-btn", "n_clicks"),
-         State("url", "pathname")],
-        prevent_initial_call=True
-    )
     def trigger_send_on_enter(n_submit, current_clicks, pathname):
         try:
             if pathname != "/chat":
