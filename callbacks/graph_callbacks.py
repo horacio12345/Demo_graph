@@ -112,7 +112,7 @@ def register_graph_callbacks(app):
                     # Generar embedding para la query
                     response = client.embeddings.create(
                         input=query,
-                        model="text-embedding-ada-002"
+                        model="text-embedding-3-small"
                     )
                     query_vector = response.data[0].embedding
                     
@@ -513,7 +513,7 @@ def get_node_embedding_info(node_label, node_id, num_values=15):
         client = OpenAI(api_key=OPENAI_API_KEY)
         response = client.embeddings.create(
             input=node_label,
-            model="text-embedding-ada-002"
+            model="text-embedding-3-small"
         )
         embedding_vector = response.data[0].embedding
         

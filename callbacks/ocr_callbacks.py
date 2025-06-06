@@ -63,7 +63,7 @@ def register_ocr_callbacks(app):
                 try:
                     response = client.embeddings.create(
                         input=chunk,
-                        model="text-embedding-ada-002"
+                        model="text-embedding-3-small"
                     )
                     embedding_vector = response.data[0].embedding
                     

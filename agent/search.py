@@ -32,7 +32,7 @@ class SemanticSearcher:
         try:
             response = self.openai_client.embeddings.create(
                 input=question,
-                model="text-embedding-ada-002"
+                model="text-embedding-3-small"
             )
             
             embedding = response.data[0].embedding
@@ -40,7 +40,7 @@ class SemanticSearcher:
             # Información para propósitos educativos
             vectorization_info = {
                 "step": "vectorization",
-                "model_used": "text-embedding-ada-002",
+                "model_used": "text-embedding-3-small",
                 "dimensions": len(embedding),
                 "first_values": embedding[:10],
                 "question_length": len(question),

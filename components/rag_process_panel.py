@@ -157,8 +157,8 @@ def create_vectorization_step(vectorization_data: Dict[str, Any]):
         status="success",
         content=[
             html.P([
-                f"Tu pregunta se convirtió en un vector de {dimensions} dimensiones usando el modelo ",
-                html.Code(vectorization_data.get("model_used", "text-embedding-ada-002"), 
+                f"La pregunta se convirtió en un vector de {dimensions} dimensiones usando el modelo ",
+                html.Code(vectorization_data.get("model_used", "text-embedding-3-small"), 
                          style={'backgroundColor': '#2d3748', 'color': '#e2e8f0', 'padding': '2px 4px'})
             ], className="text-light"),
             
@@ -391,7 +391,7 @@ def create_embedding_visualization(values: List[float]):
         color = "#22c55e" if value >= 0 else "#ef4444"
         value_items.append(
             html.Span(
-                f"{value:.3f}",
+                f"{value:.15f}",
                 style={
                     "backgroundColor": color,
                     "color": "white",
@@ -399,6 +399,9 @@ def create_embedding_visualization(values: List[float]):
                     "margin": "2px",
                     "borderRadius": "4px",
                     "fontSize": "11px",
+                    "minWidth": "120px",
+                    "display": "inline-block",
+                    "textAlign": "center",
                     "fontFamily": "monospace"
                 }
             )
@@ -421,8 +424,8 @@ def create_similarity_scores(scores: List[float]):
                 label=f"{score:.15f}",
                 color="success" if score > 0.8 else "warning" if score > 0.6 else "info",
                 className="mb-2",
-                style={"height": "25px"}
+                style={"height": "25px", 'minWidth': '300px'}
             )
         )
     
-    return html.Div(score_items)
+    return html.Div(score_items, style={'minWidth': '300px'})
