@@ -407,6 +407,7 @@ def create_embedding_visualization(values: List[float]):
     
     return html.Div(value_items, style={"lineHeight": "2"})
 
+
 def create_similarity_scores(scores: List[float]):
     """
     Visualiza los scores de similitud.
@@ -419,11 +420,16 @@ def create_similarity_scores(scores: List[float]):
         score_items.append(
             dbc.Progress(
                 value=score * 100,
-                label=f"{score:.15f}",
-                color="success" if score > 0.8 else "warning" if score > 0.6 else "info",
+                label=f"{score:.4f}",
+                color="success" if score > 0.7 else "warning" if score > 0.5 else "info",
                 className="mb-2",
-                style={"height": "30px", 'width': '100%', 'fontSize': '14px'}
+                style={
+                    "height": "25px",
+                    'width': '100%', 
+                    'fontSize': '13px',
+                    'fontWeight': 'normal'
+                }
             )
         )
     
-    return html.Div(score_items, style={'width': '100%', 'maxWidth': '600px'})
+    return html.Div(score_items, style={'width': '100%'})

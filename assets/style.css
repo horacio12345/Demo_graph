@@ -306,13 +306,13 @@ input:focus, select:focus, textarea:focus {
     border-radius: 8px !important;
     backdrop-filter: blur(20px) !important;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
-    z-index: 9999 !important;
-    max-height: 200px !important;
+    z-index: 10000 !important;
+    max-height: 250px !important;
 }
 
 .Select-menu {
     background: transparent !important;
-    max-height: 180px !important;
+    max-height: 250px !important;
     overflow-y: auto !important;
 }
 
@@ -469,13 +469,15 @@ input:focus, select:focus, textarea:focus {
 .progress {
     background: rgba(51, 65, 85, 0.5) !important;
     border-radius: 6px !important;
-    height: 8px !important;
 }
 
 .progress-bar {
     background: linear-gradient(90deg, var(--accent-blue), #2563eb) !important;
     border-radius: 6px !important;
     transition: var(--transition) !important;
+    text-align: left !important;
+    padding-left: 15px !important;
+    align-items: center !important;
 }
 
 .progress-bar.bg-success {
@@ -1058,4 +1060,27 @@ div[class*="Select"] * {
 
 .navbar-brand {
     font-size: 1.6rem !important;
+}
+
+
+/* ========== FIX ESPECÍFICO PARA DROPDOWN DEL CHAT ========== */
+#chat-llm-selector .Select-menu-outer {
+    z-index: 99999 !important;
+    position: relative !important;
+}
+
+#chat-llm-selector .Select-menu-outer .Select-menu {
+    z-index: 99999 !important;
+}
+
+/* Asegurar que el contenedor padre también tenga el z-index correcto */
+#chat-llm-selector {
+    z-index: 9999 !important;
+    position: relative !important;
+}
+
+/* Backup para cualquier dropdown en la página de chat */
+[id*="chat"] .Select-menu-outer {
+    z-index: 99999 !important;
+    position: relative !important;
 }

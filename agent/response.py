@@ -22,6 +22,12 @@ class ResponseGenerator:
         self.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
         self.prompts = self._load_prompts(prompts_file)
+        
+        # Debug: verificar que se cargó la API key
+        if self.anthropic_api_key:
+            logger.info(f"Claude API key loaded: ...{self.anthropic_api_key[-8:]}")
+        else:
+            logger.error("ANTHROPIC_API_KEY not found in environment")
     
     def _load_prompts(self, prompts_file: str) -> Dict[str, str]:
         """
@@ -98,7 +104,7 @@ RESPUESTA:""",
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.1,  # Más determinístico para RAG
-                max_tokens=800,
+                max_tokens=1000,
                 top_p=0.95
             )
             
@@ -110,7 +116,7 @@ RESPUESTA:""",
                 "llm_used": "OpenAI GPT-4o",
                 "model": "gpt-4o",
                 "temperature": 0.1,
-                "max_tokens": 800,
+                "max_tokens": 1000,
                 "prompt_length": len(prompt),
                 "response_length": len(answer),
                 "tokens_used": response.usage.total_tokens if hasattr(response, 'usage') else "N/A",
@@ -138,7 +144,7 @@ RESPUESTA:""",
         Args:
             question: Pregunta del usuario
             context: Contexto construido a partir de chunks
-            
+        
         Returns:
             Tuple de (respuesta, información_educativa)
         """
@@ -165,7 +171,7 @@ RESPUESTA:""",
             # Payload para Claude
             payload = {
                 "model": "claude-sonnet-4-20250514",
-                "max_tokens": 800,
+                "max_tokens": 1000,
                 "temperature": 0.1,
                 "system": self.prompts["system_prompt"],
                 "messages": [{"role": "user", "content": prompt}],
@@ -182,7 +188,14 @@ RESPUESTA:""",
             if resp.status_code != 200:
                 raise Exception(f"Claude API error: {resp.status_code} - {resp.text}")
             
-            answer = resp.json()["content"][0]["text"]
+            response_data = resp.json()
+            answer = response_data["content"][0]["text"]
+            
+            # Extraer tokens de Claude
+            usage_info = response_data.get("usage", {})
+            input_tokens = usage_info.get("input_tokens", 0)
+            output_tokens = usage_info.get("output_tokens", 0)
+            total_tokens = input_tokens + output_tokens
             
             # Información educativa
             response_info = {
@@ -190,14 +203,14 @@ RESPUESTA:""",
                 "llm_used": "Claude Sonnet 4",
                 "model": "claude-sonnet-4-20250514",
                 "temperature": 0.1,
-                "max_tokens": 800,
+                "max_tokens": 1000,
                 "prompt_length": len(prompt),
                 "response_length": len(answer),
+                "tokens_used": total_tokens,
                 "has_context": bool(context.strip()),
                 "success": True
             }
             
-            logger.info(f"Claude response generated: {len(answer)} chars")
             return answer, response_info
             
         except Exception as e:
@@ -209,7 +222,7 @@ RESPUESTA:""",
                 "success": False
             }
             return f"Error generando respuesta: {str(e)}", error_info
-    
+
     def generate_response(self, question: str, context: str, llm_method: str = "openai") -> Tuple[str, Dict[str, Any]]:
         """
         Genera respuesta usando el LLM especificado.
