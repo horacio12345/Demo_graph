@@ -14,7 +14,6 @@ try:
     DOCLING_AVAILABLE = True
 except ImportError:
     DOCLING_AVAILABLE = False
-    print("❌ Docling no está instalado. Instálalo con: pip install docling")
 
 # Para Tesseract OCR (fallback)
 try:
@@ -40,9 +39,7 @@ def run_docling_ocr(file_path):
         # Verificar que el archivo existe
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Archivo no encontrado: {file_path}")
-        
-        print(f"🔄 Procesando documento con Docling: {os.path.basename(file_path)}")
-        
+                
         # Inicializar convertidor
         converter = DocumentConverter()
         
@@ -52,7 +49,6 @@ def run_docling_ocr(file_path):
         # Exportar a markdown (preserva estructura)
         text = result.document.export_to_markdown()
         
-        print(f"✅ Docling completado. Texto extraído: {len(text)} caracteres")
         return text
         
     except Exception as e:
@@ -93,7 +89,6 @@ def extract_text(file_path, ocr_method="docling", lang="eng"):
     
     if file_extension in text_extensions:
         # Es un archivo de texto, leerlo directamente
-        print(f"📄 Leyendo archivo de texto: {os.path.basename(file_path)}")
         with open(file_path, 'r', encoding='utf-8') as file:
             return file.read()
     
@@ -104,7 +99,6 @@ def extract_text(file_path, ocr_method="docling", lang="eng"):
         return run_tesseract_ocr(file_path, lang=lang)
     else:
         # Si método no reconocido, usar Docling por defecto
-        print(f"⚠️ Método OCR '{ocr_method}' no reconocido. Usando Docling.")
         return run_docling_ocr(file_path)
 
 import re
@@ -138,11 +132,7 @@ def chunk_text_semantic(text, openai_api_key, max_chunk_size=1000):
             else:
                 final_chunks.append(chunk.page_content)
         
-        print(f"✅ Chunking semántico exitoso: {len(final_chunks)} chunks creados")
         return final_chunks
         
     except Exception as e:
-        # Fallback a chunking simple si falla el semántico
-        print(f"⚠️ Error en chunking semántico: {e}")
-        print("🔄 Usando chunking simple como fallback...")
         return [text[i:i+max_chunk_size] for i in range(0, len(text), max_chunk_size)]

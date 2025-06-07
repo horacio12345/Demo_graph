@@ -30,10 +30,7 @@ def register_graph_callbacks(app):
             entities = OCR_GRAPH_DATA.get('entities', [])
             relations = OCR_GRAPH_DATA.get('relations', [])
 
-            print(f"📊 Datos encontrados: {len(entities)} entidades, {len(relations)} relaciones")
-
             if not entities and not relations:
-                print("❌ No hay datos para el grafo")
                 return [], create_no_data_panel(), create_empty_legend()
 
             # Construir elementos para Cytoscape
@@ -50,12 +47,9 @@ def register_graph_callbacks(app):
             
             dynamic_legend = create_dynamic_legend(entity_counts)
             
-            print("💾 Grafo actualizado exitosamente")
-            
             return elements, info_panel, dynamic_legend
             
         except Exception as e:
-            print(f"❌ Error en callback del grafo: {e}")
             import traceback
             traceback.print_exc()
             return [], create_error_panel(str(e)), create_empty_legend()
@@ -75,7 +69,6 @@ def register_graph_callbacks(app):
             return no_update, no_update, no_update
         
         try:
-            print("🔄 Generando grafo desde Pinecone...")
             
             # 1. Verificar que hay datos en Pinecone
             from core import embeddings
@@ -83,10 +76,7 @@ def register_graph_callbacks(app):
             total_vectors = stats.get('total_vector_count', 0)
             
             if total_vectors == 0:
-                print("❌ No hay documentos en Pinecone")
                 return [], create_error_panel("No hay documentos procesados en Pinecone"), create_empty_legend()
-            
-            print(f"📊 Encontrados {total_vectors} vectores en Pinecone")
             
             # 2. Obtener chunks representativos usando queries diversas
             from openai import OpenAI
@@ -137,10 +127,7 @@ def register_graph_callbacks(app):
                     continue
             
             if not all_chunks:
-                print("❌ No se pudieron recuperar chunks")
                 return [], create_error_panel("No se pudieron recuperar chunks de Pinecone"), create_empty_legend()
-            
-            print(f"✅ Recuperados {len(all_chunks)} chunks únicos")
             
             # 3. Extraer entidades y relaciones de los chunks
             from core import llm
@@ -148,7 +135,6 @@ def register_graph_callbacks(app):
             
             for i, chunk in enumerate(all_chunks[:8]):  # Limitar para no saturar
                 try:
-                    print(f"🔄 Procesando chunk {i+1}/{min(len(all_chunks), 8)}...")
                     llm_result = llm.extract_entities_relations(chunk, llm_method="openai")
                     
                     if isinstance(llm_result, dict):
@@ -174,10 +160,7 @@ def register_graph_callbacks(app):
                     continue
             
             if not all_entities and not all_relations:
-                print("❌ No se extrajeron entidades ni relaciones")
                 return [], create_error_panel("No se pudieron extraer entidades de los documentos"), create_empty_legend()
-            
-            print(f"✅ Extraídas {len(all_entities)} entidades, {len(all_relations)} relaciones")
             
             # 4. Actualizar datos en OCR_CALLBACKS para mantener consistencia
             from callbacks.ocr_callbacks import GRAPH_DATA as OCR_GRAPH_DATA
@@ -198,9 +181,7 @@ def register_graph_callbacks(app):
                 entity_counts[entity_type] = entity_counts.get(entity_type, 0) + 1
             
             dynamic_legend = create_dynamic_legend(entity_counts)
-            
-            print("🎯 Grafo generado desde Pinecone exitosamente")
-            
+                        
             return elements, info_panel, dynamic_legend
             
         except Exception as e:
@@ -220,8 +201,6 @@ def register_graph_callbacks(app):
         """
         if not node_data:
             return no_update
-        
-        print(f"🔍 Nodo seleccionado: {node_data}")
         
         try:
             return create_node_detail_panel(node_data)
@@ -302,10 +281,6 @@ def build_cytoscape_elements(entities, relations):
     """
     elements = []
     
-    print(f"🔧 Construyendo elementos...")
-    print(f"📝 Entidades de ejemplo: {entities[:2] if entities else 'Ninguna'}")
-    print(f"🔗 Relaciones de ejemplo: {relations[:2] if relations else 'Ninguna'}")
-    
     # Agregar nodos (entidades)
     for entity in entities:
         try:
@@ -323,7 +298,6 @@ def build_cytoscape_elements(entities, relations):
             }
             
             elements.append(node_element)
-            print(f"✅ Nodo: ID={entity_id}, Type={entity_type}, Label={entity_label[:20]}...")
             
         except Exception as e:
             print(f"❌ Error agregando entidad {entity}: {e}")
@@ -350,22 +324,18 @@ def build_cytoscape_elements(entities, relations):
                     'classes': f"edge-{relation.get('type', 'unknown').lower()}"
                 }
                 elements.append(edge_element)
-                print(f"✅ Arista agregada: {source_id} → {target_id} ({edge_element['data']['label']})")
-            else:
-                print(f"⚠️ Relación ignorada - nodos no encontrados: {source_id} → {target_id}")
+
         except Exception as e:
             print(f"❌ Error agregando relación {relation}: {e}")
             continue
     
-    print(f"🎯 Total elementos creados: {len(elements)}")
+    return elements
     
     # DEBUG: Mostrar tipos de entidades encontrados
     types_found = set()
     for element in elements:
         if 'data' in element and 'type' in element['data']:
             types_found.add(element['data']['type'])
-    
-    print(f"🏷️ Tipos de entidades encontrados: {list(types_found)}")
     
     return elements
 

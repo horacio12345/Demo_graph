@@ -19,7 +19,6 @@ def register_chat_callbacks(app):
         
         # ⭐ VALIDAR QUE ESTAMOS EN LA PÁGINA CORRECTA ⭐
         if pathname != "/chat":
-            logger.debug(f"Chat callback triggered but not on chat page (pathname: {pathname})")
             raise PreventUpdate
             
         if not n_clicks or not question or not question.strip():
@@ -28,7 +27,6 @@ def register_chat_callbacks(app):
         try:
             question = question.strip()
             llm_method = llm_method or "openai"  # Asegurar que no sea None
-            logger.info(f"Processing chat question: {question[:50]} with LLM: {llm_method}")
             
             # Determinar la conversación actual, manejando el placeholder inicial
             new_conversation = []
@@ -48,8 +46,7 @@ def register_chat_callbacks(app):
                                         p_props = p_element.get('props', {})
                                         if p_props.get('children') == "Aquí verás la respuesta a tu pregunta...":
                                             is_placeholder = True
-                except Exception as e:
-                    logger.debug(f"Error checking placeholder: {e}")
+                except Exception:
                     is_placeholder = False
                 
                 if not is_placeholder:
@@ -63,9 +60,7 @@ def register_chat_callbacks(app):
                 from core.rag_orchestrator import rag_orchestrator
                 
                 # Llamar al RAG orchestrator para obtener la respuesta del LLM
-                logger.info(f"Calling RAG orchestrator for: {question[:30]}")
                 result = rag_orchestrator.process_question(question, llm_method)
-                logger.info(f"RAG orchestrator result: Success={result.get('success')}")
 
                 if result.get("success"):
                     bot_answer = result.get("final_answer", "No se pudo generar una respuesta del LLM.")
@@ -73,7 +68,6 @@ def register_chat_callbacks(app):
                     # VERIFICAR QUE LA RESPUESTA NO ESTÉ VACÍA
                     if not bot_answer or not bot_answer.strip():
                         bot_answer = "Lo siento, no pude generar una respuesta basada en la información disponible."
-                        logger.warning("Empty response from LLM, using fallback message")
                     
                     new_conversation.append(create_bot_message(bot_answer, show_process=True))
                     
@@ -88,18 +82,15 @@ def register_chat_callbacks(app):
                     rag_panel_content = create_complete_process_view(rag_panel_data)
                     status_message = "✅ Pregunta respondida por el LLM"
                     rag_data_to_store = result.get("steps", {})
-                    
-                    logger.info(f"Bot response generated successfully: {len(bot_answer)} chars")
+
                 else:
                     error_msg = result.get("error", "Error desconocido del RAG orchestrator.")
-                    logger.error(f"RAG orchestrator failed: {error_msg}")
                     new_conversation.append(create_error_message(error_msg))
                     rag_panel_content = create_initial_state()
                     status_message = f"❌ Error RAG: {error_msg[:50]}"
                     rag_data_to_store = {"error": error_msg}
             
             except Exception as e:
-                logger.error(f"Exception calling RAG orchestrator: {e}", exc_info=True)
                 critical_error_msg = f"Error crítico en el servidor: {str(e)[:100]}"
                 new_conversation.append(create_error_message(critical_error_msg))
                 rag_panel_content = create_initial_state()
@@ -115,7 +106,6 @@ def register_chat_callbacks(app):
             )
             
         except Exception as e:
-            logger.error(f"Critical error in chat callback: {e}", exc_info=True)
             # Retornar valores por defecto seguros
             return (
                 [create_error_message(f"Error crítico: {str(e)[:100]}")],
@@ -230,8 +220,6 @@ def register_chat_callbacks(app):
         except Exception:
             raise PreventUpdate
 
-    logger.info("Chat callbacks registered successfully with robust error handling")
-
 # ⭐ FUNCIÓN AUXILIAR PARA VERIFICAR SI ESTAMOS EN LA PÁGINA CORRECTA ⭐
 def is_on_chat_page(pathname):
     """
@@ -293,7 +281,6 @@ def register_chat_callbacks(app):
         
         # ⭐ VALIDAR QUE ESTAMOS EN LA PÁGINA CORRECTA ⭐
         if pathname != "/chat":
-            logger.debug(f"Chat callback triggered but not on chat page (pathname: {pathname})")
             raise PreventUpdate
             
         if not n_clicks or not question or not question.strip():
@@ -301,7 +288,6 @@ def register_chat_callbacks(app):
         
         question = question.strip()
         llm_method = llm_method or "openai"  # Asegurar que no sea None
-        logger.info(f"Processing chat question: {question[:50]} with LLM: {llm_method}")
         
         # Determinar la conversación actual, manejando el placeholder inicial
         new_conversation = []
@@ -321,8 +307,7 @@ def register_chat_callbacks(app):
                                     p_props = p_element.get('props', {})
                                     if p_props.get('children') == "Aquí verás la respuesta a tu pregunta...":
                                         is_placeholder = True
-            except Exception as e:
-                logger.debug(f"Error checking placeholder: {e}")
+            except Exception:
                 is_placeholder = False
             
             if not is_placeholder:
@@ -336,9 +321,7 @@ def register_chat_callbacks(app):
             from core.rag_orchestrator import rag_orchestrator
             
             # Llamar al RAG orchestrator para obtener la respuesta del LLM
-            logger.info(f"Calling RAG orchestrator for: {question[:30]}")
             result = rag_orchestrator.process_question(question, llm_method)
-            logger.info(f"RAG orchestrator result: Success={result.get('success')}")
 
             if result.get("success"):
                 bot_answer = result.get("final_answer", "No se pudo generar una respuesta del LLM.")
@@ -346,8 +329,7 @@ def register_chat_callbacks(app):
                 # VERIFICAR QUE LA RESPUESTA NO ESTÉ VACÍA
                 if not bot_answer or not bot_answer.strip():
                     bot_answer = "Lo siento, no pude generar una respuesta basada en la información disponible."
-                    logger.warning("Empty response from LLM, using fallback message")
-                
+
                 new_conversation.append(create_bot_message(bot_answer, show_process=True))
                 
                 # DATOS PARA EL PANEL RAG - FORMATO CORRECTO
@@ -362,17 +344,14 @@ def register_chat_callbacks(app):
                 status_message = "✅ Pregunta respondida por el LLM"
                 rag_data_to_store = result.get("steps", {})
                 
-                logger.info(f"Bot response generated successfully: {len(bot_answer)} chars")
             else:
                 error_msg = result.get("error", "Error desconocido del RAG orchestrator.")
-                logger.error(f"RAG orchestrator failed: {error_msg}")
                 new_conversation.append(create_error_message(error_msg))
                 rag_panel_content = create_initial_state()
                 status_message = f"❌ Error RAG: {error_msg[:50]}"
                 rag_data_to_store = {"error": error_msg}
         
         except Exception as e:
-            logger.error(f"Exception calling RAG orchestrator: {e}", exc_info=True)
             critical_error_msg = f"Error crítico en el servidor: {str(e)[:100]}"
             new_conversation.append(create_error_message(critical_error_msg))
             rag_panel_content = create_initial_state()
@@ -484,5 +463,3 @@ def register_chat_callbacks(app):
         except Exception as e:
             logger.error(f"Error checking documents: {e}")
             return (create_initial_state(), {})
-
-    logger.info("Chat callbacks registered successfully with layout validation")

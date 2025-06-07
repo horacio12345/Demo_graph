@@ -79,14 +79,12 @@ def create_complete_process_view(rag_data: Dict[str, Any]):
     """
     Vista completa del proceso RAG con todos los pasos ejecutados.
     """
-    print(f"DEBUG: create_complete_process_view recibió: {rag_data}")
     
     if not rag_data or not rag_data.get("success", False):
         error_msg = rag_data.get("error", "Error desconocido") if rag_data else "No hay datos disponibles"
         return create_error_view(error_msg)
     
     steps = rag_data.get("steps", {})
-    print(f"DEBUG: steps extraídos: {steps}")
     
     return html.Div([
         # Resumen ejecutivo
@@ -424,8 +422,8 @@ def create_similarity_scores(scores: List[float]):
                 label=f"{score:.15f}",
                 color="success" if score > 0.8 else "warning" if score > 0.6 else "info",
                 className="mb-2",
-                style={"height": "25px", 'minWidth': '300px'}
+                style={"height": "30px", 'width': '100%', 'fontSize': '14px'}
             )
         )
     
-    return html.Div(score_items, style={'minWidth': '300px'})
+    return html.Div(score_items, style={'width': '100%', 'maxWidth': '600px'})

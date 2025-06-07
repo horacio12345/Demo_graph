@@ -27,12 +27,8 @@ def upsert_embedding(vector_id, vector_values, document_id, metadata=None):
     meta["document_id"] = str(document_id)
     vectors = [{"id": str(vector_id), "values": vector_values, "metadata": meta}]
     
-    print(f"🔄 Guardando embedding - ID: {vector_id}, Document: {document_id}")
-    print(f"📊 Vector shape: {len(vector_values)} dimensiones")
-    
     try:
         result = index.upsert(vectors=vectors)
-        print(f"✅ Embedding guardado exitosamente - Upserted: {result.get('upserted_count', 'unknown')}")
         return result
     except Exception as e:
         print(f"❌ Error guardando embedding: {e}")
@@ -83,7 +79,7 @@ def test_connection():
     """
     try:
         stats = get_index_stats()
-        print(f"Conexión exitosa. Vectores en el índice: {stats.get('total_vector_count', 0)}")
+
         return True
     except Exception as e:
         print(f"Error de conexión: {e}")

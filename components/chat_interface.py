@@ -153,24 +153,6 @@ def create_bot_message(answer: str, show_process: bool = False) -> dbc.Card:
         ])
     ]
     
-    if show_process:
-        card_content.append(
-            html.Div([
-                dbc.Button(
-                    [html.I(className="fas fa-cogs me-2"), "Ver Proceso RAG Detallado"],
-                    id="show-process-btn",  # ⭐ ID VERIFICADO ⭐
-                    color="outline-info",
-                    size="sm",
-                    className="mt-2",
-                    style={
-                        'backgroundColor': '#0dcaf0 !important',
-                        'color': '#000 !important',
-                        'borderColor': '#0dcaf0 !important'
-                    }
-                )
-            ])
-        )
-    
     return dbc.Card([
         dbc.CardBody(card_content, style={'color': '#0f5132 !important'})
     ], className="mb-3 me-5", color="success", outline=True, 

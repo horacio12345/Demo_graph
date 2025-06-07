@@ -43,7 +43,6 @@ def extract_json_from_text(text):
     """
     Extrae JSON de manera robusta, maneja markdown code blocks.
     """
-    logging.debug(f"Extrayendo JSON del texto: {repr(text[:100])}...")
     
     # Limpiar texto básico
     text = text.strip()
@@ -51,40 +50,33 @@ def extract_json_from_text(text):
     # Estrategia 1: Parsing directo
     try:
         result = json.loads(text)
-        logging.debug("JSON parseado directamente")
         return result
     except json.JSONDecodeError:
-        logging.debug("Parsing directo falló, probando otras estrategias...")
+        logging.warning("Parsing directo falló, probando otras estrategias...")
     
     # Estrategia 2: Remover markdown code blocks (PRIMERO)
     cleaned_text = text
     if "```json" in text:
-        logging.debug("Detectado ```json wrapper")
         parts = text.split("```json")
         if len(parts) > 1:
             # Tomar la parte después de ```json y antes del siguiente ```
             json_candidate = parts[1].split("```")[0].strip()
-            logging.debug(f"JSON extraído de markdown: {repr(json_candidate[:100])}...")
             try:
                 result = json.loads(json_candidate)
-                logging.debug("JSON extraído de código markdown")
                 return result
             except json.JSONDecodeError as e:
-                logging.debug(f"JSON de markdown falló: {e}")
+                logging.warning(f"JSON de markdown falló: {e}")
                 cleaned_text = json_candidate  # Usar para próximas estrategias
     elif "```" in text:
-        logging.debug("Detectado ``` wrapper genérico")
         parts = text.split("```")
         if len(parts) >= 3:
             # Tomar la parte del medio
             json_candidate = parts[1].strip()
-            logging.debug(f"JSON extraído de código genérico: {repr(json_candidate[:100])}...")
             try:
                 result = json.loads(json_candidate)
-                logging.debug("JSON extraído de código genérico")
                 return result
             except json.JSONDecodeError as e:
-                logging.debug(f"JSON de código genérico falló: {e}")
+                logging.warning(f"JSON de código genérico falló: {e}")
                 cleaned_text = json_candidate
     
     # Estrategia 3: Buscar entre llaves en texto limpio
@@ -93,13 +85,11 @@ def extract_json_from_text(text):
     
     if start != -1 and end != -1 and end > start:
         json_text = cleaned_text[start:end+1]
-        logging.debug(f"JSON entre llaves: {repr(json_text[:100])}...")
         try:
             result = json.loads(json_text)
-            logging.debug("JSON extraído entre llaves")
             return result
         except json.JSONDecodeError as e:
-            logging.debug(f"JSON entre llaves falló: {e}")
+            logging.warning(f"JSON entre llaves falló: {e}")
     
     # Si todo falla, retornar estructura vacía
     logging.warning("No se pudo extraer JSON, retornando estructura vacía")
@@ -161,7 +151,6 @@ def openai_extract_entities_relations(text, model="gpt-4o"):
         client = OpenAI(api_key=OPENAI_API_KEY)
         prompt = create_entity_prompt(text)
         
-        logging.debug("Llamando a OpenAI...")
         response = client.chat.completions.create(
             model=model,
             messages=[
@@ -173,20 +162,16 @@ def openai_extract_entities_relations(text, model="gpt-4o"):
         )
         
         raw_response = response.choices[0].message.content
-        logging.debug(f"Respuesta de OpenAI: {raw_response[:200]}...")
         
         # Extraer y validar JSON
         extracted_data = extract_json_from_text(raw_response)
         validated_data = validate_json_structure(extracted_data)
         
-        # Solo log del resultado final (importante)
-        logging.info(f"Extracción completada: {len(validated_data['entities'])} entidades, {len(validated_data['relations'])} relaciones")
         return validated_data
         
     except Exception as e:
         logging.error(f"Error en OpenAI: {e}")
         import traceback
-        logging.debug(traceback.format_exc())
         return {"entities": [], "relations": []}
 
 def claude_extract_entities_relations(text, model="claude-sonnet-4-20250514"):
@@ -212,7 +197,6 @@ def claude_extract_entities_relations(text, model="claude-sonnet-4-20250514"):
             "messages": [{"role": "user", "content": prompt}],
         }
         
-        logging.debug("Llamando a Claude...")
         resp = requests.post("https://api.anthropic.com/v1/messages", 
                            headers=headers, json=payload)
         
@@ -221,13 +205,11 @@ def claude_extract_entities_relations(text, model="claude-sonnet-4-20250514"):
             return {"entities": [], "relations": []}
         
         raw_response = resp.json()["content"][0]["text"]
-        logging.debug(f"Respuesta de Claude: {raw_response[:200]}...")
         
         # Extraer y validar JSON
         extracted_data = extract_json_from_text(raw_response)
         validated_data = validate_json_structure(extracted_data)
         
-        logging.info(f"Extracción Claude completada: {len(validated_data['entities'])} entidades, {len(validated_data['relations'])} relaciones")
         return validated_data
         
     except Exception as e:
@@ -245,9 +227,6 @@ def extract_entities_relations(text, llm_method=LLM_DEFAULT):
     # Truncar si es muy largo
     if len(text) > 4000:
         text = text[:4000] + "..."
-        logging.warning("Texto truncado a 4000 caracteres")
-    
-    logging.debug(f"Extrayendo con {llm_method.upper()} - {len(text)} caracteres")
     
     try:
         if llm_method == "openai":
@@ -265,11 +244,9 @@ def test_extraction(sample_text="Juan trabaja en Microsoft y vive en Madrid."):
     """
     Función de prueba.
     """
-    logging.info(f"Probando extracción con: {sample_text}")
     
     result = extract_entities_relations(sample_text)
-    logging.info("Resultado final:")
-    logging.info(json.dumps(result, indent=2, ensure_ascii=False))
+    print(json.dumps(result, indent=2, ensure_ascii=False))
     
     return result
 

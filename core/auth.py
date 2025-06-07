@@ -52,7 +52,6 @@ class AuthManager:
                         # Convertir a hash
                         users_data[username] = hash_password(password)
                         updated = True
-                        logger.warning(f"Contraseña en texto plano detectada para {username}. Convertida a hash.")
                 
                 if updated:
                     self._save_users(users_data)
@@ -159,17 +158,14 @@ def login_user(username, password):
         session['authenticated'] = True
         session['username'] = username
         
-        logger.info(f"Usuario {username} autenticado correctamente")
         return True, "Login exitoso"
     else:
-        logger.warning(f"Intento de login fallido para usuario: {username}")
         return False, "Usuario o contraseña incorrectos"
 
 def logout_user():
     """Cerrar sesión del usuario actual."""
     username = session.get('username', 'unknown')
     session.clear()
-    logger.info(f"Usuario {username} cerró sesión")
     return True
 
 def setup_auth_routes(app):

@@ -31,7 +31,6 @@ class RAGOrchestrator:
             self.context_builder = ContextBuilder(max_context_length=max_context_length)
             self.response_generator = ResponseGenerator(prompts_file=prompts_file)
             
-            logger.info("RAG Orchestrator initialized with modular components")
         except Exception as e:
             logger.error(f"Error initializing RAG modules: {e}")
             # Fallback a None, se manejarán en process_question
@@ -50,7 +49,6 @@ class RAGOrchestrator:
         Returns:
             Diccionario completo con todos los pasos del proceso
         """
-        logger.info(f"Processing question: {question[:30]}...")
         
         # Estructura del resultado
         result = {
@@ -70,7 +68,6 @@ class RAGOrchestrator:
                 return result
 
             # PASO 1: Búsqueda semántica
-            logger.debug("Step 1: Semantic search")
             chunks, search_info = self.searcher.search_query(question, top_k=self.max_chunks)
             result["steps"]["search"] = search_info
             
@@ -79,10 +76,7 @@ class RAGOrchestrator:
                 result["error"] = f"Error en búsqueda semántica: {search_info.get('search', {}).get('error', 'Unknown')}"
                 return result
             
-            logger.info(f"Found {len(chunks)} similar chunks")
-
             # PASO 2: Construcción de contexto
-            logger.debug("Step 2: Context building")
             context, context_info = self.context_builder.build_context(chunks)
             result["steps"]["context"] = context_info
             
@@ -91,10 +85,7 @@ class RAGOrchestrator:
                 result["error"] = f"Error construyendo contexto: {context_info.get('error', 'Unknown')}"
                 return result
             
-            logger.info(f"Context built: {len(context)} chars, {context_info.get('chunks_used', 0)} chunks")
-
             # PASO 3: Generación de respuesta
-            logger.debug("Step 3: Response generation")
             response, response_info = self.response_generator.generate_response(
                 question, context, llm_method
             )
@@ -105,10 +96,7 @@ class RAGOrchestrator:
                 result["error"] = f"Error generando respuesta: {response_info.get('error', 'Unknown')}"
                 return result
             
-            logger.info(f"OpenAI response generated: {len(response)} chars")
-
             # PASO 4: Información de fuentes
-            logger.debug("Step 4: Source information")
             sources_info = self._extract_sources_info(chunks)
             result["steps"]["sources"] = sources_info
             
@@ -116,7 +104,6 @@ class RAGOrchestrator:
             result["final_answer"] = response
             result["success"] = True
             
-            logger.info("Question processed successfully")
             return result
             
         except Exception as e:

@@ -38,11 +38,9 @@ def register_ocr_callbacks(app):
             f.write(decoded)
 
         try:
-            print("🔄 Extrayendo texto...")
             text = ocr.extract_text(tmp_path, ocr_method=ocr_method)
             
             # Chunking semántico
-            print("🔄 Creando chunks...")
             from core.utils import clean_text
             from core.ocr import chunk_text_semantic
             from dotenv import load_dotenv
@@ -51,7 +49,6 @@ def register_ocr_callbacks(app):
             chunks = chunk_text_semantic(clean_text(text), OPENAI_API_KEY, max_chunk_size=1000)
             
             # Generar y guardar embeddings
-            print(f"🔄 Generando embeddings para {len(chunks)} chunks...")
             client = OpenAI(api_key=OPENAI_API_KEY)
             document_id = utils.generate_document_id(filename)
             
@@ -87,7 +84,6 @@ def register_ocr_callbacks(app):
                     continue
             
             # ⭐ EXTRAER ENTIDADES Y RELACIONES ⭐
-            print("🔄 Extrayendo entidades y relaciones con LLM...")
             from core import llm
             
             # Procesar chunks para extraer entidades
@@ -96,15 +92,12 @@ def register_ocr_callbacks(app):
             
             for i, chunk in enumerate(sample_chunks):
                 try:
-                    print(f"🔄 Procesando chunk {i+1}/{len(sample_chunks)}: {chunk[:100]}...")
                     llm_result = llm.extract_entities_relations(chunk, llm_method="openai")
                     
                     # Verificar resultado
                     if isinstance(llm_result, dict):
                         chunk_entities = llm_result.get("entities", [])
                         chunk_relations = llm_result.get("relations", [])
-                        
-                        print(f"📊 Chunk {i+1}: {len(chunk_entities)} entidades, {len(chunk_relations)} relaciones")
                         
                         # Asegurar IDs únicos agregando prefijo de chunk
                         for entity in chunk_entities:
@@ -127,7 +120,6 @@ def register_ocr_callbacks(app):
                     continue
             
             # ⭐ GUARDAR EN VARIABLE LOCAL ⭐
-            print(f"💾 Guardando datos: {len(all_entities)} entidades, {len(all_relations)} relaciones")
             
             # Guardar en variable local de este módulo
             global GRAPH_DATA
@@ -141,14 +133,8 @@ def register_ocr_callbacks(app):
                 g.entities = all_entities
                 g.relations = all_relations
                 g.chunks = chunks
-                print("✅ Datos guardados en Flask g")
             except:
-                print("⚠️ No se pudo guardar en Flask g, usando solo variable local")
-            
-            # Imprimir muestra de datos para verificar
-            print("\n📋 DATOS EXTRAÍDOS:")
-            print(f"Entidades de ejemplo: {all_entities[:3] if all_entities else 'Ninguna'}")
-            print(f"Relaciones de ejemplo: {all_relations[:3] if all_relations else 'Ninguna'}")
+                pass
             
             # Limpiar archivo temporal
             try:
@@ -158,7 +144,6 @@ def register_ocr_callbacks(app):
             
             # Mensaje de éxito que activará el callback del grafo
             success_message = f"✅ Procesamiento completo! {len(chunks)} chunks, {embeddings_saved} embeddings, {len(all_entities)} entidades, {len(all_relations)} relaciones extraídas."
-            print(f"🎯 Retornando mensaje: {success_message}")
             
             return success_message
             
@@ -179,29 +164,24 @@ def register_ocr_callbacks(app):
             raise PreventUpdate
         
         try:
-            print(f"🔄 Procesando URL: {url}")
             
             # Hacer request para obtener headers
             import requests
             response = requests.head(url, allow_redirects=True, timeout=10)
             content_type = response.headers.get('content-type', '').lower()
             
-            print(f"📋 Content-Type detectado: {content_type}")
             
             # Determinar tipo de contenido
             if 'application/pdf' in content_type:
                 # Es un PDF - usar método original
-                print("📄 Detectado PDF - usando Docling")
                 return process_pdf_url(url, ocr_method)
                 
             elif 'text/html' in content_type or 'wikipedia.org' in url:
                 # Es HTML - extraer texto web
-                print("🌐 Detectado HTML - extrayendo texto web")
                 return process_html_url(url, ocr_method)
                 
             else:
                 # Intentar como PDF de todos modos (algunos servidores no envían headers correctos)
-                print("❓ Tipo desconocido - intentando como PDF")
                 return process_pdf_url(url, ocr_method)
                 
         except Exception as e:
@@ -217,11 +197,9 @@ def process_html_url(url, ocr_method):
         import requests
         from bs4 import BeautifulSoup
         
-        print("🔄 Descargando página web...")
         response = requests.get(url, timeout=15)
         response.raise_for_status()
         
-        print("🔄 Extrayendo texto de HTML...")
         soup = BeautifulSoup(response.content, 'html.parser')
         
         # Remover scripts, estilos, etc.
@@ -239,9 +217,6 @@ def process_html_url(url, ocr_method):
         # Truncar si es muy largo
         if len(text) > 50000:  # Límite para evitar costos excesivos
             text = text[:50000] + "..."
-            print(f"⚠️ Texto truncado a 50,000 caracteres")
-        
-        print(f"✅ Texto extraído: {len(text)} caracteres")
         
         # Continuar con el procesamiento normal
         return process_extracted_text(text, url, "web_extraction")
@@ -254,7 +229,6 @@ def process_pdf_url(url, ocr_method):
     Procesa una URL PDF usando el método original.
     """
     try:
-        print("🔄 Descargando PDF...")
         tmp_path = utils.get_temp_file_path(suffix=".pdf")
         import requests
         r = requests.get(url, timeout=30)
@@ -263,7 +237,6 @@ def process_pdf_url(url, ocr_method):
             with open(tmp_path, "wb") as f:
                 f.write(r.content)
                 
-            print("🔄 Extrayendo texto con OCR...")
             text = ocr.extract_text(tmp_path, ocr_method=ocr_method)
             
             # Limpiar archivo temporal
@@ -284,7 +257,6 @@ def process_extracted_text(text, source, method):
     Procesa texto extraído (común para HTML y PDF).
     """
     try:
-        print("🔄 Creando chunks...")
         from core.utils import clean_text
         from core.ocr import chunk_text_semantic
         from dotenv import load_dotenv
@@ -294,7 +266,6 @@ def process_extracted_text(text, source, method):
         cleaned_text = clean_text(text)
         chunks = chunk_text_semantic(cleaned_text, OPENAI_API_KEY, max_chunk_size=1000)
         
-        print(f"🔄 Generando embeddings para {len(chunks)} chunks...")
         client = OpenAI(api_key=OPENAI_API_KEY)
         document_id = utils.generate_document_id(source)
         
@@ -306,7 +277,7 @@ def process_extracted_text(text, source, method):
             try:
                 response = client.embeddings.create(
                     input=chunk,
-                    model="text-embedding-ada-002"
+                    model="text-embedding-3-small"
                 )
                 embedding_vector = response.data[0].embedding
                 
@@ -330,7 +301,6 @@ def process_extracted_text(text, source, method):
                 continue
         
         # Extraer entidades y relaciones
-        print("🔄 Extrayendo entidades y relaciones con LLM...")
         from core import llm
         
         sample_chunks = chunks[:5]
@@ -338,7 +308,6 @@ def process_extracted_text(text, source, method):
         
         for i, chunk in enumerate(sample_chunks):
             try:
-                print(f"🔄 Procesando chunk {i+1}/{len(sample_chunks)}...")
                 llm_result = llm.extract_entities_relations(chunk, llm_method="openai")
                 
                 if isinstance(llm_result, dict):
@@ -377,10 +346,7 @@ def process_extracted_text(text, source, method):
         except:
             pass
         
-        print(f"💾 Datos guardados: {len(all_entities)} entidades, {len(all_relations)} relaciones")
-        
         success_message = f"✅ URL procesada! {len(chunks)} chunks, {embeddings_saved} embeddings, {len(all_entities)} entidades, {len(all_relations)} relaciones extraídas."
-        print(f"🎯 Retornando mensaje: {success_message}")
         return success_message
         
     except Exception as e:

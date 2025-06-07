@@ -5,6 +5,7 @@ import os
 import logging
 from dash import Dash, html, dcc, Input, Output, callback_context
 import dash_bootstrap_components as dbc
+import warnings
 
 # Componentes originales
 from components.upload_component import upload_component
@@ -28,20 +29,12 @@ from agent.chat_page import layout as chat_page_layout # ASUME QUE ESTÁ EN ./ag
 from callbacks.chat_callbacks import register_chat_callbacks
 
 # ⭐ CONFIGURACIÓN DE LOGS PARA PRODUCCIÓN ⭐
-if os.environ.get("RAILWAY_ENVIRONMENT_NAME"):  # Detecta Railway
-    logging.basicConfig(
-        level=logging.WARNING,  # Solo warnings y errores
-        format='%(levelname)s: %(message)s'
-    )
-else:
-    logging.basicConfig(
-        level=logging.DEBUG,    # Todo en local
-        format='%(levelname)s: %(message)s'
-    )
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+logging.basicConfig(level=logging.ERROR)
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.ZEPHYR], suppress_callback_exceptions=True)  # ⭐ AÑADIR suppress_callback_exceptions=True ⭐
+app = Dash(__name__, external_stylesheets=[dbc.themes.ZEPHYR], suppress_callback_exceptions=True)
 
-# ⭐ LÍNEA CRÍTICA PARA DEPLOYMENT ⭐
 server = app.server
 
 # ⭐ CONFIGURAR CLAVE SECRETA PARA FLASK SESSIONS ⭐
@@ -57,7 +50,6 @@ server.config['PERMANENT_SESSION_LIFETIME'] = 1800
 setup_auth_routes(app)
 
 # ⭐ LAYOUT DE VALIDACIÓN PARA CALLBACKS DINÁMICOS ⭐
-# Esto declara todos los IDs que podrían existir en cualquier página
 validation_layout = html.Div([
     # Componentes principales
     dcc.Location(id='url', refresh=False),
@@ -97,14 +89,12 @@ app.validation_layout = validation_layout
 
 def get_main_layout_content():
     """Layout del contenido de la página principal (procesamiento y grafo)."""
-    print("DEBUG: Llamando a get_main_layout_content()")
     return dbc.Container([
         dcc.Store(id='graph-cache', storage_type='session', data={}),
         dcc.Store(id='rag-process-data', storage_type='memory', data={}),
         
         dbc.Row([
             dbc.Col([
-                #html.H2("RAG Demo - Knowledge Graph Extraction", style={'color': 'black'}),
                 html.Hr(),
                 upload_component(),
                 ocr_selector(),
@@ -113,18 +103,17 @@ def get_main_layout_content():
                 html.Button("Reset Pinecone", id="btn-reset-pinecone", n_clicks=0, style={
                     "margin": "8px 0", "background": "#e11d48", "color": "white", "borderRadius": "8px"
                 })
-            ], width=3, style={"backgroundColor": "#f8fafc", "padding": "16px", "borderRadius": "12px", "minHeight": "calc(100vh - 76px)"}), # Ajustar si es necesario
+            ], width=3, style={"backgroundColor": "#f8fafc", "padding": "16px", "borderRadius": "12px", "minHeight": "calc(100vh - 76px)"}),
             dbc.Col([
                 graph_view(),
                 html.Div(id="embedding-panel", style={"marginTop": "32px"})
             ], width=9, style={"padding": "24px"}),
             html.Div(id="rag-process-content", style={"display": "none"})  
         ])
-    ], fluid=True, style={"background": "#f1f5f9", "minHeight": "calc(100vh - 56px)"}) # Ajustar altura si hay navbar
+    ], fluid=True, style={"background": "#f1f5f9", "minHeight": "calc(100vh - 56px)"})
 
 def get_base_layout_with_navbar():
     """Layout base que incluye la barra de navegación y el contenedor de página."""
-    print("DEBUG: Llamando a get_base_layout_with_navbar()")
     current_user = get_current_user()
 
     navbar = dbc.NavbarSimple(
@@ -161,41 +150,29 @@ def get_base_layout_with_navbar():
     return html.Div([
         dcc.Location(id='url', refresh=False),
         navbar,
-        html.Div(id='page-content', children=[html.P("Cargando contenido inicial de la página...")]) # Contenido inicial
+        html.Div(id='page-content', children=[html.P("Cargando contenido inicial de la página...")])
     ])
 
 
 def serve_layout():
     """Función que decide qué layout servir según autenticación."""
-    print("DEBUG: Llamando a serve_layout()")
     if not is_authenticated():
-        print("DEBUG: serve_layout -> No autenticado, sirviendo get_login_layout()")
         return get_login_layout()
     else:
-        # Si está autenticado, sirve el layout base con navegación
-        print("DEBUG: serve_layout -> Autenticado, sirviendo get_base_layout_with_navbar()")
         return get_base_layout_with_navbar()
 
-# ⭐ ASIGNAR LAYOUT DINÁMICO ⭐
-print("DEBUG: Asignando app.layout = serve_layout")
 app.layout = serve_layout
 
 
-# ---- NUEVO CALLBACK: Para renderizar el contenido de la página ----
 @app.callback(Output('page-content', 'children'),
               Input('url', 'pathname'))
 def display_page(pathname):
     """Actualiza el contenido de la página basado en la URL."""
-    print(f"DEBUG: display_page -> pathname: {pathname}")
     if pathname == '/chat':
-        print("DEBUG: display_page -> Sirviendo chat_page_layout()")
         return chat_page_layout()
     elif pathname == '/':
-        print("DEBUG: display_page -> Sirviendo get_main_layout_content() para /")
         return get_main_layout_content()
-    # else:
-    #     return "404 - Página no encontrada" # O redirigir
-    print(f"DEBUG: display_page -> Pathname '{pathname}' no coincide, sirviendo get_main_layout_content() por defecto")
+    
     return get_main_layout_content()
 
 
@@ -208,4 +185,4 @@ register_chat_callbacks(app)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    app.run_server(debug=True if not os.environ.get("RAILWAY_ENVIRONMENT_NAME") else False, host="0.0.0.0", port=port)
+    app.run_server(debug=False if not os.environ.get("RAILWAY_ENVIRONMENT_NAME") else False, host="0.0.0.0", port=port)
