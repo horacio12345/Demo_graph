@@ -1084,3 +1084,14 @@ div[class*="Select"] * {
     z-index: 99999 !important;
     position: relative !important;
 }
+
+/* ========== FIX PARA TÍTULOS EN CHAT ========== */
+#chat-conversation h1,
+#chat-conversation h2, 
+#chat-conversation h3,
+#chat-conversation h4,
+#chat-conversation h5,
+#chat-conversation h6 {
+    color: #1a365d !important;
+    font-weight: 700 !important;
+}

@@ -113,6 +113,172 @@ def chat_interface():
         ])
     ], fluid=True)
 
+def parse_markdown_to_html(text: str):
+    """
+    Convierte Markdown básico a elementos HTML de Dash manteniendo estilos consistentes
+    """
+    if not text:
+        return []
+    
+    lines = text.split('\n')
+    elements = []
+    current_paragraph = []
+    in_list = False
+    list_items = []
+    
+    for line in lines:
+        line_stripped = line.strip()
+        
+        # Headers (## Título)
+        if line_stripped.startswith('##'):
+            # Finalizar lista si existe
+            if in_list and list_items:
+                elements.append(create_list(list_items))
+                list_items = []
+                in_list = False
+            
+            # Añadir párrafo previo si existe
+            if current_paragraph:
+                paragraph_text = '\n'.join(current_paragraph)
+                elements.append(create_paragraph_with_formatting(paragraph_text))
+                current_paragraph = []
+            
+            # Crear header
+            header_text = line_stripped.replace('##', '').strip()
+            elements.append(html.H4(
+                header_text,
+                style={
+                    'color': '#1a365d !important',
+                    'fontSize': '1.1rem',
+                    'fontWeight': '600',
+                    'marginTop': '1rem',
+                    'marginBottom': '0.5rem'
+                }
+            ))
+        
+        # Listas con *
+        elif line_stripped.startswith('* '):
+            # Finalizar párrafo previo si existe
+            if current_paragraph:
+                paragraph_text = '\n'.join(current_paragraph)
+                elements.append(create_paragraph_with_formatting(paragraph_text))
+                current_paragraph = []
+            
+            # Añadir a lista
+            list_text = line_stripped[2:].strip()  # Quitar "* "
+            list_items.append(list_text)
+            in_list = True
+        
+        # Línea vacía
+        elif line_stripped == '':
+            # Finalizar lista si existe
+            if in_list and list_items:
+                elements.append(create_list(list_items))
+                list_items = []
+                in_list = False
+            
+            if current_paragraph:
+                paragraph_text = '\n'.join(current_paragraph)
+                elements.append(create_paragraph_with_formatting(paragraph_text))
+                current_paragraph = []
+        
+        # Línea normal
+        else:
+            # Finalizar lista si existe
+            if in_list and list_items:
+                elements.append(create_list(list_items))
+                list_items = []
+                in_list = False
+            
+            current_paragraph.append(line)
+    
+    # Finalizar elementos pendientes
+    if in_list and list_items:
+        elements.append(create_list(list_items))
+    elif current_paragraph:
+        paragraph_text = '\n'.join(current_paragraph)
+        elements.append(create_paragraph_with_formatting(paragraph_text))
+    
+    return elements
+
+def create_paragraph_with_formatting(text: str):
+    """
+    Crea un párrafo procesando formato inline (**bold**)
+    """
+    if not text.strip():
+        return html.Br()
+    
+    # Procesar texto con **bold**
+    parts = []
+    remaining_text = text
+    
+    while '**' in remaining_text:
+        # Encontrar primer **
+        start_idx = remaining_text.find('**')
+        if start_idx == -1:
+            break
+            
+        # Añadir texto antes del **
+        if start_idx > 0:
+            parts.append(remaining_text[:start_idx])
+        
+        # Encontrar el ** de cierre
+        remaining_after_start = remaining_text[start_idx + 2:]
+        end_idx = remaining_after_start.find('**')
+        
+        if end_idx == -1:
+            # No hay cierre, añadir todo el resto
+            parts.append(remaining_text[start_idx:])
+            break
+        
+        # Extraer texto en bold
+        bold_text = remaining_after_start[:end_idx]
+        parts.append(html.Strong(
+            bold_text,
+            style={'color': '#0a3622', 'fontWeight': '600'}
+        ))
+        
+        # Continuar con el resto
+        remaining_text = remaining_after_start[end_idx + 2:]
+    
+    # Añadir texto restante
+    if remaining_text:
+        parts.append(remaining_text)
+    
+    return html.P(
+        parts,
+        style={
+            'color': '#0f5132',
+            'fontSize': '0.95rem',
+            'lineHeight': '1.6',
+            'marginBottom': '0.5rem',
+            'whiteSpace': 'pre-wrap'
+        }
+    )
+
+def create_list(items):
+    """
+    Crea una lista HTML con items
+    """
+    list_elements = []
+    for item in items:
+        # Procesar formato inline en cada item
+        processed_item = create_paragraph_with_formatting(item)
+        # Convertir el párrafo a contenido de li
+        list_elements.append(html.Li(
+            processed_item.children,  # Usar el contenido del párrafo
+            style={'color': '#0f5132', 'marginBottom': '0.25rem'}
+        ))
+    
+    return html.Ul(
+        list_elements,
+        style={
+            'margin': '0.5rem 0',
+            'paddingLeft': '1.5rem',
+            'color': '#0f5132'
+        }
+    )
+
 def create_user_message(question: str) -> dbc.Card:
     """
     Crea un mensaje del usuario en el chat.
@@ -132,24 +298,24 @@ def create_user_message(question: str) -> dbc.Card:
 
 def create_bot_message(answer: str, show_process: bool = False) -> dbc.Card:
     """
-    Crea un mensaje del bot en el chat.
+    Crea un mensaje del bot en el chat con formato Markdown procesado manualmente.
     """
     # Verificar que la respuesta no esté vacía
     if not answer or not answer.strip():
         answer = "Lo siento, no pude generar una respuesta basada en la información disponible."
+    
+    # Procesar el markdown manualmente
+    formatted_content = parse_markdown_to_html(answer)
     
     card_content = [
         html.Div([
             html.Strong("🤖 Respuesta del Agente:", 
                        className="text-success",
                        style={'color': '#0a3622 !important'}),
-            html.P(answer, 
-                  className="mb-0 mt-2", 
-                  style={
-                      "whiteSpace": "pre-wrap",
-                      'color': '#0f5132 !important',
-                      'fontSize': '0.95rem'
-                  })
+            html.Div(
+                formatted_content,
+                style={'marginTop': '0.5rem'}
+            )
         ])
     ]
     
