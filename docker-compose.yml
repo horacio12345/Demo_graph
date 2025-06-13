@@ -1,0 +1,20 @@
+# ./docker-compose.yml
+
+version: '3.8'
+
+services:
+  rag-app:
+    # Construye la imagen usando el Dockerfile en el directorio actual
+    build: .
+    # Reinicia el contenedor automáticamente a menos que se detenga manualmente
+    restart: unless-stopped
+    # Carga las variables de entorno desde el archivo .env
+    env_file:
+      - .env
+    # Mapea el puerto del contenedor (8080) al puerto del host (8080)
+    ports:
+      - "8080:8080"
+    # Monta un volumen para persistir los datos del usuario
+    # Esto es VITAL para que no pierdas el archivo users.json
+    volumes:
+      - ./data:/app/data

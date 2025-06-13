@@ -1,0 +1,33 @@
+# ./.dockerignore
+
+# Entornos virtuales
+.venv/
+venv/
+.uvenv/
+env/
+*/.venv
+
+# Archivos de Git
+.git/
+.gitignore
+
+# Archivos de configuración de IDEs
+.vscode/
+.idea/
+
+# Archivos de caché de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de entorno. Se pasan con 'env_file' en docker-compose
+.env
+
+# Directorio de datos que se montará como volumen
+data/
+
+# Archivos de build y distribución de Python
+build/
+dist/
+*.egg-info
